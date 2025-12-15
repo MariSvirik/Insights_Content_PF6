@@ -1,53 +1,42 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
+    Badge,
+    Breadcrumb,
+    BreadcrumbItem,
+    Button,
+    Checkbox,
+    Dropdown,
+    DropdownItem,
+    DropdownList,
+    Flex,
+    FlexItem,
+    MenuToggle,
+    MenuToggleElement,
+    Pagination,
+    PaginationVariant,
+    SearchInput,
+    Tab,
+    TabTitleText,
+    Tabs,
     Title,
     Toolbar,
     ToolbarContent,
-    ToolbarItem,
-    ToolbarGroup,
-    Button,
-    Select,
-    SelectOption,
-    SelectList,
-    MenuToggle,
-    MenuToggleElement,
-    SearchInput,
-    Pagination,
-    PaginationVariant,
-    Dropdown,
-    DropdownList,
-    DropdownItem,
-    Checkbox,
-    Breadcrumb,
-    BreadcrumbItem,
-    Flex,
-    FlexItem,
-    Tabs,
-    Tab,
-    TabTitleText,
-    Badge,
-    Card,
-    CardBody
+    ToolbarItem
 } from '@patternfly/react-core';
 import {
     Table,
-    Thead,
-    Tr,
-    Th,
     Tbody,
-    Td
+    Td,
+    Th,
+    Thead,
+    Tr
 } from '@patternfly/react-table';
 import {
-    SortByDirection,
     ISortBy,
+    SortByDirection,
 } from '@patternfly/react-table';
 import {
-    FilterIcon,
-    CheckCircleIcon,
-    ExclamationTriangleIcon,
-    EllipsisVIcon,
-    OutlinedQuestionCircleIcon,
     TagIcon
 } from '@patternfly/react-icons';
 
@@ -193,7 +182,6 @@ const TemplateDetail: React.FunctionComponent = () => {
     }, []);
 
     const areAllSystemsSelected = paginatedSystems.length > 0 && selectedSystems.length === paginatedSystems.length;
-    const areSomeSystemsSelected = selectedSystems.length > 0 && selectedSystems.length < paginatedSystems.length;
 
     const systemsToolbar = (
         <Toolbar id="systems-toolbar">

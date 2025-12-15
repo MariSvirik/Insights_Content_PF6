@@ -1,60 +1,46 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-    Page,
-    PageSection,
-    Title,
-    Tabs,
-    Tab,
-    TabContent,
-    TabTitleText,
-    Toolbar,
-    ToolbarContent,
-    ToolbarItem,
-    ToolbarFilter,
-    ToolbarGroup,
-    Button,
-    Select,
-    SelectOption,
-    SelectList,
-    MenuToggle,
-    MenuToggleElement,
-    TextInputGroup,
-    TextInputGroupMain,
-    TextInputGroupUtilities,
-    ButtonVariant,
-    SearchInput,
-    Pagination,
-    PaginationVariant,
-    Dropdown,
-    DropdownList,
-    DropdownItem,
-    Checkbox,
-    Badge,
     Breadcrumb,
     BreadcrumbItem,
+    Button,
+    Checkbox,
+    Dropdown,
+    DropdownItem,
+    DropdownList,
     Flex,
-    FlexItem
+    FlexItem,
+    MenuToggle,
+    MenuToggleElement,
+    Pagination,
+    PaginationVariant,
+    SearchInput,
+    Select,
+    SelectList,
+    SelectOption,
+    Title,
+    Toolbar,
+    ToolbarContent,
+    ToolbarGroup,
+    ToolbarItem
 } from '@patternfly/react-core';
 import {
     Table,
-    Thead,
-    Tr,
-    Th,
     Tbody,
-    Td
+    Td,
+    Th,
+    Thead,
+    Tr
 } from '@patternfly/react-table';
 import {
-    SortByDirection,
     ISortBy,
+    SortByDirection,
 } from '@patternfly/react-table';
 import {
-    SearchIcon,
-    FilterIcon,
-    EllipsisVIcon,
     CheckCircleIcon,
+    EllipsisVIcon,
     ExclamationTriangleIcon,
-    SortAmountUpIcon,
-    SortAmountDownIcon
+    FilterIcon,
+    SortAmountUpIcon
 } from '@patternfly/react-icons';
 
 interface Template {
@@ -115,17 +101,6 @@ const Templates: React.FunctionComponent = () => {
         }
     ];
 
-    // Sample actions for toolbar kebab
-    const toolbarActions = [
-        {
-            title: 'Export',
-            onClick: () => console.log('Export templates')
-        },
-        {
-            title: 'Import',
-            onClick: () => console.log('Import templates')
-        }
-    ];
 
     const filteredAndSortedData = useMemo(() => {
         let filtered = templates;
@@ -217,7 +192,6 @@ const Templates: React.FunctionComponent = () => {
     };
 
     const isAllSelected = paginatedData.length > 0 && selectedTemplates.length === paginatedData.length;
-    const isPartiallySelected = selectedTemplates.length > 0 && selectedTemplates.length < paginatedData.length;
 
     const StatusIcon = ({ status }: { status: 'Valid' | 'Invalid' }) => {
         if (status === 'Valid') {
@@ -227,7 +201,6 @@ const Templates: React.FunctionComponent = () => {
     };
 
     const StatusBadge = ({ status }: { status: 'Valid' | 'Invalid' }) => {
-        const color = status === 'Valid' ? 'green' : 'red';
         return (
             <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
                 <FlexItem>

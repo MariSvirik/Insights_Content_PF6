@@ -1,38 +1,34 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
+    Alert,
+    AlertVariant,
+    Button,
+    Checkbox,
+    Divider,
+    Dropdown,
+    DropdownItem,
+    DropdownList,
+    EmptyState,
+    EmptyStateActions,
+    EmptyStateBody,
+    MenuToggle,
+    MenuToggleElement,
+    Pagination,
+    SearchInput,
+    Select,
+    SelectList,
+    SelectOption,
+    Skeleton,
+    Tab,
+    TabTitleText,
+    Tabs,
     Title,
     Toolbar,
     ToolbarContent,
-    ToolbarItem,
-    ToolbarGroup,
-    ToolbarFilter,
-    ToolbarToggleGroup,
-    SearchInput,
-    Pagination,
-    Checkbox,
-    Skeleton,
-    EmptyState,
-    EmptyStateBody,
-    EmptyStateActions,
-    Button,
-    Dropdown,
-    DropdownList,
-    DropdownItem,
-    MenuToggle,
-    Divider,
-    Select,
-    SelectOption,
-    SelectList,
-    MenuToggleElement,
-    ButtonVariant,
-    Alert,
-    AlertVariant,
-    Tabs,
-    Tab,
-    TabTitleText
+    ToolbarItem
 } from '@patternfly/react-core';
-import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
-import { FilterIcon, EllipsisVIcon, SearchIcon, LongArrowAltUpIcon, CheckIcon } from '@patternfly/react-icons';
+import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import { CheckIcon, EllipsisVIcon, LongArrowAltUpIcon } from '@patternfly/react-icons';
 
 // Package interface
 interface Package {
@@ -94,8 +90,7 @@ const TableDemo: React.FC = () => {
     const [searchValue, setSearchValue] = useState('');
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isDropdownOpen, setIsDropdownOpen] = useState<{ [key: string]: boolean }>({});
+    const [isLoading] = useState(false);
     const [isStatusSelectOpen, setIsStatusSelectOpen] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<string>('');
     const [isBulkSelectOpen, setIsBulkSelectOpen] = useState(false);
@@ -175,17 +170,6 @@ const TableDemo: React.FC = () => {
         setPage(1);
     }, []);
 
-    // Loading state
-    if (isLoading) {
-        return (
-            <div>
-                <div>
-                    <Skeleton height="400px" />
-                </div>
-            </div>
-        );
-    }
-
     const handleStatusSelect = useCallback((_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => {
         setSelectedStatus(value as string);
         setIsStatusSelectOpen(false);
@@ -234,6 +218,17 @@ const TableDemo: React.FC = () => {
             columnIndex: sortByIndex
         };
     }, [sortBy, handleSort]);
+
+    // Loading state
+    if (isLoading) {
+        return (
+            <div>
+                <div>
+                    <Skeleton height="400px" />
+                </div>
+            </div>
+        );
+    }
 
     // Tab content components
     const renderOverviewContent = () => (
