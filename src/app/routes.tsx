@@ -121,7 +121,7 @@ const AppRoutes = (): React.ReactElement => (
     {flattenedRoutes.map(({ path, element }, idx) => (
       <Route path={path} element={element} key={idx} />
     ))}
-    <Route element={<NotFound />} />
+    <Route path="*" element={<NotFound />} />
   </Routes>
 );
 

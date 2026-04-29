@@ -10,6 +10,7 @@ const ASSET_PATH = process.env.ASSET_PATH || '/';
 
 export default (env) => {
   return {
+    entry: path.resolve('./src/index.tsx'),
     module: {
       rules: [
         {

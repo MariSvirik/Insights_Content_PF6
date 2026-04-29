@@ -1,8 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Breadcrumb,
-    BreadcrumbItem,
     Button,
     Flex,
     FlexItem,
@@ -194,7 +192,7 @@ const ContentManagement: React.FunctionComponent = () => {
                     </ToolbarItem>
                 </ToolbarGroup>
                 <ToolbarItem>
-                    <Button variant="primary">Add content template</Button>
+                    <Button variant="secondary">Add content template</Button>
                 </ToolbarItem>
                 <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
                     <Pagination
@@ -217,10 +215,6 @@ const ContentManagement: React.FunctionComponent = () => {
 
     return (
         <div style={{ padding: '24px', backgroundColor: 'var(--pf-t--global--background--color--primary)' }}>
-            <Breadcrumb>
-                <BreadcrumbItem isActive>Content management</BreadcrumbItem>
-            </Breadcrumb>
-
             <div style={{ marginTop: '16px', marginBottom: '24px' }}>
                 <Flex alignItems={{ default: 'alignItemsCenter' }}>
                     <FlexItem>

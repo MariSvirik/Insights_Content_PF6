@@ -13,6 +13,8 @@ export default merge(common('development'), {
   devServer: {
     host: HOST,
     port: PORT,
+    // Listen on all interfaces so localhost:9000 and 127.0.0.1:9000 both work.
+    allowedHosts: 'all',
     historyApiFallback: true,
     open: true,
     static: {
