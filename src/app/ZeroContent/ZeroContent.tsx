@@ -59,7 +59,7 @@ const ZeroContent: React.FunctionComponent = () => {
                                     lineHeight: '1'
                                 }}>+</span>
                                 <span style={bodyFont}>
-                                    Create templates with repository snapshots to control exactly when updates are applied and to ensure identical patch levels across your fleet.
+                                    Create templates with repository snapshots to control exactly when updates are applied and to ensure identical patch levels across all your assigned systems.
                                 </span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
@@ -114,7 +114,7 @@ const ZeroContent: React.FunctionComponent = () => {
                                     Content templates use repository snapshots to control which advisories and package versions are applied when patching your RHEL systems.
                                 </p>
                                 <p style={{ color: '#6a6e73', marginBottom: '24px', fontSize: '14px' }}>
-                                    Use templates to define a Standard Operating Environment (SOE) by pinning repositories to a specific point in time. This ensures a consistent baseline of tested packages and advisories across your fleet.
+                                    Use templates to define a Standard Operating Environment (SOE) by pinning repositories to a specific point in time. This ensures a consistent baseline of tested packages and advisories across your systems.
                                 </p>
                                 <div>
                                     <Button
