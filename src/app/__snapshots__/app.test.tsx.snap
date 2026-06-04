@@ -230,6 +230,34 @@ exports[`App tests should render default App component 1`] = `
               <a
                 class="pf-v6-c-nav__link"
                 data-discover="true"
+                href="/zero-content"
+              >
+                Zero Content
+              </a>
+            </li>
+            <li
+              class="pf-v6-c-nav__item"
+              data-ouia-component-id="OUIA-Generated-NavItem-5"
+              data-ouia-component-type="PF6/NavItem"
+              data-ouia-safe="true"
+            >
+              <a
+                class="pf-v6-c-nav__link"
+                data-discover="true"
+                href="/tasks"
+              >
+                Tasks
+              </a>
+            </li>
+            <li
+              class="pf-v6-c-nav__item"
+              data-ouia-component-id="OUIA-Generated-NavItem-6"
+              data-ouia-component-type="PF6/NavItem"
+              data-ouia-safe="true"
+            >
+              <a
+                class="pf-v6-c-nav__link"
+                data-discover="true"
                 href="/support"
               >
                 Support
@@ -244,7 +272,7 @@ exports[`App tests should render default App component 1`] = `
               <button
                 aria-expanded="false"
                 class="pf-v6-c-nav__link"
-                id="Settings-6"
+                id="Settings-9"
               >
                 Settings
                 <span
@@ -270,7 +298,7 @@ exports[`App tests should render default App component 1`] = `
                 </span>
               </button>
               <section
-                aria-labelledby="Settings-6"
+                aria-labelledby="Settings-9"
                 class="pf-v6-c-nav__subnav"
                 hidden=""
               >
@@ -280,7 +308,7 @@ exports[`App tests should render default App component 1`] = `
                 >
                   <li
                     class="pf-v6-c-nav__item"
-                    data-ouia-component-id="OUIA-Generated-NavItem-5"
+                    data-ouia-component-id="OUIA-Generated-NavItem-7"
                     data-ouia-component-type="PF6/NavItem"
                     data-ouia-safe="true"
                   >
@@ -294,7 +322,7 @@ exports[`App tests should render default App component 1`] = `
                   </li>
                   <li
                     class="pf-v6-c-nav__item"
-                    data-ouia-component-id="OUIA-Generated-NavItem-6"
+                    data-ouia-component-id="OUIA-Generated-NavItem-8"
                     data-ouia-component-type="PF6/NavItem"
                     data-ouia-safe="true"
                   >
