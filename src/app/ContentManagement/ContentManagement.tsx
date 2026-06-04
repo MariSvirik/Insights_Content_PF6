@@ -1,11 +1,19 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+    Breadcrumb,
+    BreadcrumbItem,
     Button,
+    Card,
+    CardBody,
+    Divider,
     Flex,
     FlexItem,
+    Icon,
     MenuToggle,
     MenuToggleElement,
+    PageBreadcrumb,
+    PageSection,
     Pagination,
     PaginationVariant,
     Popover,
@@ -33,31 +41,43 @@ import {
 } from '@patternfly/react-table';
 import {
     CheckCircleIcon,
-    ExclamationTriangleIcon,
+    ExclamationCircleIcon,
     FilterIcon,
-    OutlinedQuestionCircleIcon
+    OutlinedQuestionCircleIcon,
 } from '@patternfly/react-icons';
 
-// Templates interface and data
 interface Template {
     id: string;
     name: string;
     description: string;
     architecture: 'x86_64' | 'aarch64';
-    version: string;
+    osVersion: string;
     snapshotDate: string;
     status: 'Valid' | 'Invalid';
-    numberOfHosts: number;
 }
 
 const generateTemplateData = (): Template[] => {
     const templates = [
-        { name: 'Production Security Updates', description: 'Security patches for production environments', architecture: 'x86_64' as const, version: 'el9', snapshotDate: 'Use latest', status: 'Valid' as const, numberOfHosts: 5 },
-        { name: 'Database Server Baseline', description: 'Baseline configuration for database servers', architecture: 'aarch64' as const, version: 'el9', snapshotDate: 'Use latest', status: 'Valid' as const, numberOfHosts: 12 },
-        { name: 'Web Server Standard', description: 'Standard configuration for web servers', architecture: 'x86_64' as const, version: 'el9', snapshotDate: 'Use latest', status: 'Valid' as const, numberOfHosts: 8 },
-        { name: 'Development Environment', description: 'Development and testing environment template', architecture: 'x86_64' as const, version: 'el8', snapshotDate: '06 Mar 2025', status: 'Valid' as const, numberOfHosts: 3 },
-        { name: 'Infrastructure Services', description: 'Template for infrastructure and monitoring services', architecture: 'x86_64' as const, version: 'el8', snapshotDate: '07 May 2025', status: 'Valid' as const, numberOfHosts: 15 },
-        { name: 'Legacy Systems', description: 'Template for legacy system support', architecture: 'x86_64' as const, version: 'el8', snapshotDate: '02 Mar 2025', status: 'Invalid' as const, numberOfHosts: 0 },
+        { name: 'Production Security Updates', description: 'Security patches for production environments', architecture: 'x86_64' as const, osVersion: 'RHEL 9', snapshotDate: 'Use latest', status: 'Valid' as const },
+        { name: 'Database Server Baseline', description: 'Baseline configuration for database servers', architecture: 'aarch64' as const, osVersion: 'RHEL 9', snapshotDate: 'Use latest', status: 'Valid' as const },
+        { name: 'Web Server Standard', description: 'Standard configuration for web servers', architecture: 'x86_64' as const, osVersion: 'RHEL 9', snapshotDate: 'Use latest', status: 'Valid' as const },
+        { name: 'Development Environment', description: 'Development and testing environment template', architecture: 'x86_64' as const, osVersion: 'RHEL 8', snapshotDate: '06 Mar 2025', status: 'Valid' as const },
+        { name: 'Infrastructure Services', description: 'Template for infrastructure and monitoring services', architecture: 'x86_64' as const, osVersion: 'RHEL 8', snapshotDate: '07 May 2025', status: 'Valid' as const },
+        { name: 'Legacy Systems', description: 'Template for legacy system support', architecture: 'x86_64' as const, osVersion: 'RHEL 8', snapshotDate: '02 Mar 2025', status: 'Invalid' as const },
+        { name: 'stepan-template-rhel9', description: '', architecture: 'aarch64' as const, osVersion: 'RHEL 9', snapshotDate: '07 Jan 2026', status: 'Valid' as const },
+        { name: 'Edge Computing Base', description: 'Minimal footprint for edge deployments', architecture: 'aarch64' as const, osVersion: 'RHEL 9', snapshotDate: '15 Apr 2025', status: 'Valid' as const },
+        { name: 'CI/CD Runner Template', description: 'Template for CI/CD pipeline runners', architecture: 'x86_64' as const, osVersion: 'RHEL 9', snapshotDate: 'Use latest', status: 'Valid' as const },
+        { name: 'SAP HANA Baseline', description: 'SAP HANA optimized template', architecture: 'x86_64' as const, osVersion: 'RHEL 8', snapshotDate: '20 Feb 2025', status: 'Valid' as const },
+        { name: 'Container Host Standard', description: 'Container runtime host configuration', architecture: 'x86_64' as const, osVersion: 'RHEL 9', snapshotDate: 'Use latest', status: 'Valid' as const },
+        { name: 'GPU Workstation', description: 'GPU-enabled workstation template', architecture: 'x86_64' as const, osVersion: 'RHEL 9', snapshotDate: '10 May 2025', status: 'Valid' as const },
+        { name: 'Compliance Hardened', description: 'CIS Level 2 hardened template', architecture: 'x86_64' as const, osVersion: 'RHEL 8', snapshotDate: '01 Jun 2025', status: 'Valid' as const },
+        { name: 'Minimal Server', description: 'Minimal server installation', architecture: 'x86_64' as const, osVersion: 'RHEL 9', snapshotDate: 'Use latest', status: 'Valid' as const },
+        { name: 'HPC Compute Node', description: 'High-performance computing node template', architecture: 'x86_64' as const, osVersion: 'RHEL 8', snapshotDate: '12 Mar 2025', status: 'Invalid' as const },
+        { name: 'DMZ Gateway', description: 'DMZ perimeter gateway template', architecture: 'x86_64' as const, osVersion: 'RHEL 9', snapshotDate: '25 Apr 2025', status: 'Valid' as const },
+        { name: 'Monitoring Stack', description: 'Prometheus/Grafana monitoring template', architecture: 'aarch64' as const, osVersion: 'RHEL 9', snapshotDate: 'Use latest', status: 'Valid' as const },
+        { name: 'Backup Server', description: 'Backup and disaster recovery server', architecture: 'x86_64' as const, osVersion: 'RHEL 8', snapshotDate: '08 Jan 2025', status: 'Valid' as const },
+        { name: 'Load Balancer Template', description: 'HAProxy load balancer configuration', architecture: 'x86_64' as const, osVersion: 'RHEL 9', snapshotDate: 'Use latest', status: 'Valid' as const },
+        { name: 'Staging Mirror', description: 'Staging environment content mirror', architecture: 'x86_64' as const, osVersion: 'RHEL 8', snapshotDate: '19 May 2025', status: 'Invalid' as const },
     ];
 
     return templates.map((template, index) => ({
@@ -69,35 +89,35 @@ const generateTemplateData = (): Template[] => {
 const ContentManagement: React.FunctionComponent = () => {
     const navigate = useNavigate();
 
-    // Templates state
     const [templates] = useState<Template[]>(generateTemplateData());
-    const [templateSearchValue, setTemplateSearchValue] = useState('');
-    const [templateSortBy, setTemplateSortBy] = useState<ISortBy>({});
-    const [templatePage, setTemplatePage] = useState(1);
-    const [templatePerPage, setTemplatePerPage] = useState(20);
-    const [isTemplateFilterOpen, setIsTemplateFilterOpen] = useState(false);
-    const [templateFilterBy, setTemplateFilterBy] = useState('Name');
+    const [searchValue, setSearchValue] = useState('');
+    const [sortBy, setSortBy] = useState<ISortBy>({});
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(20);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [filterBy, setFilterBy] = useState('Name');
 
-    // Templates filtering and sorting
+    const totalCount = 523;
+
     const filteredAndSortedTemplates = useMemo(() => {
         let filtered = templates;
 
-        if (templateSearchValue) {
+        if (searchValue) {
             filtered = filtered.filter(template =>
-                template.name.toLowerCase().includes(templateSearchValue.toLowerCase()) ||
-                template.description.toLowerCase().includes(templateSearchValue.toLowerCase())
+                template.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+                template.description.toLowerCase().includes(searchValue.toLowerCase())
             );
         }
 
-        if (templateSortBy.index !== undefined) {
-            const { index, direction } = templateSortBy;
+        if (sortBy.index !== undefined) {
+            const { index, direction } = sortBy;
             filtered = [...filtered].sort((a, b) => {
                 let aValue, bValue;
                 switch (index) {
                     case 0: aValue = a.name; bValue = b.name; break;
                     case 1: aValue = a.description; bValue = b.description; break;
                     case 2: aValue = a.architecture; bValue = b.architecture; break;
-                    case 3: aValue = a.version; bValue = b.version; break;
+                    case 3: aValue = a.osVersion; bValue = b.osVersion; break;
                     case 4: aValue = a.snapshotDate; bValue = b.snapshotDate; break;
                     case 5: aValue = a.status; bValue = b.status; break;
                     default: return 0;
@@ -112,197 +132,169 @@ const ContentManagement: React.FunctionComponent = () => {
         }
 
         return filtered;
-    }, [templates, templateSearchValue, templateSortBy]);
+    }, [templates, searchValue, sortBy]);
 
     const paginatedTemplates = useMemo(() => {
-        const startIdx = (templatePage - 1) * templatePerPage;
-        return filteredAndSortedTemplates.slice(startIdx, startIdx + templatePerPage);
-    }, [filteredAndSortedTemplates, templatePage, templatePerPage]);
+        const startIdx = (page - 1) * perPage;
+        return filteredAndSortedTemplates.slice(startIdx, startIdx + perPage);
+    }, [filteredAndSortedTemplates, page, perPage]);
 
-    const getTemplateSortParams = useCallback((columnIndex: number) => {
-        return {
-            sort: {
-                sortBy: templateSortBy,
-                onSort: (_event: any, index: number, direction: 'asc' | 'desc') => {
-                    setTemplateSortBy({ index, direction });
-                },
-                columnIndex
-            }
-        };
-    }, [templateSortBy]);
-
-    const StatusIcon = ({ status }: { status: 'Valid' | 'Invalid' }) => {
-        if (status === 'Valid') {
-            return <CheckCircleIcon style={{ color: '#3E8635' }} />;
+    const getSortParams = useCallback((columnIndex: number) => ({
+        sort: {
+            sortBy,
+            onSort: (_event: any, index: number, direction: 'asc' | 'desc') => {
+                setSortBy({ index, direction });
+            },
+            columnIndex
         }
-        return <ExclamationTriangleIcon style={{ color: '#C9190B' }} />;
-    };
+    }), [sortBy]);
 
-    const StatusBadge = ({ status }: { status: 'Valid' | 'Invalid' }) => {
-        return (
-            <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
-                <FlexItem>
-                    <StatusIcon status={status} />
-                </FlexItem>
-                <FlexItem>
-                    <span style={{
-                        color: status === 'Valid' ? '#3E8635' : '#C9190B',
-                        fontWeight: '600'
-                    }}>
-                        {status}
-                    </span>
-                </FlexItem>
-            </Flex>
-        );
-    };
-
-    const templatesToolbar = (
-        <Toolbar id="templates-toolbar">
-            <ToolbarContent>
-                <ToolbarGroup>
-                    <ToolbarItem style={{ marginRight: '0' }}>
-                        <Select
-                            id="template-filter-select"
-                            isOpen={isTemplateFilterOpen}
-                            selected={templateFilterBy}
-                            onSelect={(_event, selection) => {
-                                setTemplateFilterBy(selection as string);
-                                setIsTemplateFilterOpen(false);
-                            }}
-                            onOpenChange={(isOpen) => setIsTemplateFilterOpen(isOpen)}
-                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                                <MenuToggle ref={toggleRef} onClick={() => setIsTemplateFilterOpen(!isTemplateFilterOpen)}>
-                                    <FilterIcon /> {templateFilterBy}
-                                </MenuToggle>
-                            )}
-                        >
-                            <SelectList>
-                                <SelectOption value="Name">Name</SelectOption>
-                                <SelectOption value="Description">Description</SelectOption>
-                            </SelectList>
-                        </Select>
-                    </ToolbarItem>
-                    <ToolbarItem style={{ marginLeft: '8px', marginRight: '0' }}>
-                        <SearchInput
-                            placeholder="Filter by name"
-                            value={templateSearchValue}
-                            onChange={(_event, value) => setTemplateSearchValue(value)}
-                            onClear={() => setTemplateSearchValue('')}
-                        />
-                    </ToolbarItem>
-                </ToolbarGroup>
-                <ToolbarItem>
-                    <Button variant="secondary">Add content template</Button>
-                </ToolbarItem>
-                <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
-                    <Pagination
-                        itemCount={filteredAndSortedTemplates.length}
-                        widgetId="templates-pagination-top"
-                        perPage={templatePerPage}
-                        page={templatePage}
-                        variant={PaginationVariant.top}
-                        onSetPage={(_event, newPage) => setTemplatePage(newPage)}
-                        onPerPageSelect={(_event, newPerPage) => {
-                            setTemplatePerPage(newPerPage);
-                            setTemplatePage(1);
-                        }}
-                        isCompact
-                    />
-                </ToolbarItem>
-            </ToolbarContent>
-        </Toolbar>
+    const StatusDisplay = ({ status }: { status: 'Valid' | 'Invalid' }) => (
+        <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+            <FlexItem>
+                <Icon status={status === 'Valid' ? 'success' : 'danger'}>
+                    {status === 'Valid' ? <CheckCircleIcon /> : <ExclamationCircleIcon />}
+                </Icon>
+            </FlexItem>
+            <FlexItem>{status}</FlexItem>
+        </Flex>
     );
 
     return (
-        <div style={{ padding: '24px', backgroundColor: 'var(--pf-t--global--background--color--primary)' }}>
-            <div style={{ marginTop: '16px', marginBottom: '24px' }}>
-                <Flex alignItems={{ default: 'alignItemsCenter' }}>
+        <>
+            <PageBreadcrumb>
+                <Breadcrumb>
+                    <BreadcrumbItem to="#">RHEL</BreadcrumbItem>
+                    <BreadcrumbItem to="#">Content</BreadcrumbItem>
+                    <BreadcrumbItem isActive>Templates</BreadcrumbItem>
+                </Breadcrumb>
+            </PageBreadcrumb>
+
+            <PageSection aria-label="Templates title">
+                <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsNone' }}>
                     <FlexItem>
-                        <Title headingLevel="h1" size="2xl" style={{ display: 'inline' }}>
-                            Content Management
-                        </Title>
+                        <Title headingLevel="h1" size="2xl">Templates</Title>
+                    </FlexItem>
+                    <FlexItem>
                         <Popover
-                            headerContent="About Content Management"
+                            headerContent="About templates"
                             bodyContent={
                                 <div>
-                                    <p>Manage templates for patching processes and repositories for content sources.</p>
-                                    <p>Streamline your content delivery and maintain consistent system configurations across your infrastructure.</p>
-                                    <p><a href="#" style={{ color: 'var(--pf-t--global--color--brand--default)' }}>Learn more</a></p>
+                                    <p>Control and filter the content delivered to your registered systems such as errata or specific package versions.</p>
+                                    <p>Establish date-based patch baselines for your systems by using content templates.</p>
                                 </div>
                             }
                             position="right"
-                            enableFlip
-                            appendTo={() => document.body}
-                            aria-label="content-management-popover"
-                            closeBtnAriaLabel="Close popover"
                         >
-                            <Button variant="plain" aria-label="Help for Content Management" style={{ padding: 0, marginLeft: '4px' }}>
-                                <OutlinedQuestionCircleIcon style={{ color: 'var(--pf-t--global--text--color--subtle)' }} />
+                            <Button variant="plain" aria-label="Help for Templates">
+                                <OutlinedQuestionCircleIcon />
                             </Button>
                         </Popover>
                     </FlexItem>
                 </Flex>
-                <div style={{ marginTop: '8px' }}>
-                    <p style={{ color: 'var(--pf-t--global--text--color--subtle)', margin: '0 0 8px 0' }}>
-                        Manage templates for patching processes and repositories for content sources.
-                    </p>
-                    <div>
-                        <Button
-                            variant="link"
-                            isInline
-                            onClick={() => navigate('/repositories')}
-                            style={{ padding: 0 }}
-                        >
-                            Manage repositories
-                        </Button>
-                        <span style={{ color: 'var(--pf-t--global--text--color--subtle)', marginLeft: '4px' }}>
-                            for manual snapshots and custom content sources.
-                        </span>
-                    </div>
-                </div>
-            </div>
 
-            {/* Templates Section - Primary Focus */}
-            <div style={{ marginBottom: '24px' }}>
-                <div style={{ marginBottom: '16px' }}>
-                    <Flex alignItems={{ default: 'alignItemsCenter' }}>
-                        <FlexItem>
-                            <Title headingLevel="h2" size="lg" style={{ display: 'inline' }}>Templates</Title>
-                            <Popover
-                                headerContent="About templates"
-                                bodyContent={
-                                    <div>
-                                        <p>Control and filter the content delivered to your registered systems such as errata or a specific package versions.</p>
-                                        <p>Establish date-based patch baselines for your systems by using content templates.</p>
-                                        <p><a href="#" style={{ color: 'var(--pf-t--global--color--brand--default)' }}>Learn more</a></p>
-                                    </div>
-                                }
-                                position="right"
-                                enableFlip
-                                appendTo={() => document.body}
-                                aria-label="templates-popover"
-                                closeBtnAriaLabel="Close popover"
-                            >
-                                <Button variant="plain" aria-label="Help for Templates" style={{ padding: 0, marginLeft: '4px' }}>
-                                    <OutlinedQuestionCircleIcon style={{ color: 'var(--pf-t--global--text--color--subtle)' }} />
+                <Card isCompact className="pf-v6-u-mt-md">
+                    <CardBody>
+                        <Flex alignItems={{ default: 'alignItemsCenter' }}>
+                            <FlexItem>
+                                Repository introspection in the last 24 hours:
+                            </FlexItem>
+                            <Divider orientation={{ default: 'vertical' }} />
+                            <FlexItem>
+                                <Flex spaceItems={{ default: 'spaceItemsXs' }} alignItems={{ default: 'alignItemsCenter' }}>
+                                    <Icon status="success"><CheckCircleIcon /></Icon>
+                                    <span>15 RH repositories</span>
+                                </Flex>
+                            </FlexItem>
+                            <Divider orientation={{ default: 'vertical' }} />
+                            <FlexItem>
+                                <Flex spaceItems={{ default: 'spaceItemsXs' }} alignItems={{ default: 'alignItemsCenter' }}>
+                                    <Icon status="success"><CheckCircleIcon /></Icon>
+                                    <span>8 custom repositories</span>
+                                </Flex>
+                            </FlexItem>
+                            <Divider orientation={{ default: 'vertical' }} />
+                            <FlexItem>
+                                <Flex spaceItems={{ default: 'spaceItemsXs' }} alignItems={{ default: 'alignItemsCenter' }}>
+                                    <Icon status="danger"><ExclamationCircleIcon /></Icon>
+                                    <span>2 invalid repositories</span>
+                                </Flex>
+                            </FlexItem>
+                            <FlexItem align={{ default: 'alignRight' }}>
+                                <Button variant="link" isInline onClick={() => navigate('/repositories')}>
+                                    View repositories
                                 </Button>
-                            </Popover>
-                        </FlexItem>
-                    </Flex>
-                </div>
+                            </FlexItem>
+                        </Flex>
+                    </CardBody>
+                </Card>
+            </PageSection>
 
-                {templatesToolbar}
+            <PageSection aria-label="Templates" isFilled>
+                <Toolbar id="templates-toolbar">
+                    <ToolbarContent>
+                        <ToolbarGroup className="app-toolbar-filter-group">
+                            <ToolbarItem>
+                                <Select
+                                    id="template-filter-select"
+                                    isOpen={isFilterOpen}
+                                    selected={filterBy}
+                                    onSelect={(_event, selection) => {
+                                        setFilterBy(selection as string);
+                                        setIsFilterOpen(false);
+                                    }}
+                                    onOpenChange={(isOpen) => setIsFilterOpen(isOpen)}
+                                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                        <MenuToggle ref={toggleRef} onClick={() => setIsFilterOpen(!isFilterOpen)}>
+                                            <FilterIcon /> {filterBy}
+                                        </MenuToggle>
+                                    )}
+                                >
+                                    <SelectList>
+                                        <SelectOption value="Name">Name</SelectOption>
+                                        <SelectOption value="Description">Description</SelectOption>
+                                    </SelectList>
+                                </Select>
+                            </ToolbarItem>
+                            <ToolbarItem>
+                                <SearchInput
+                                    placeholder="Find by name"
+                                    value={searchValue}
+                                    onChange={(_event, value) => setSearchValue(value)}
+                                    onClear={() => setSearchValue('')}
+                                />
+                            </ToolbarItem>
+                        </ToolbarGroup>
+                        <ToolbarItem>
+                            <Button variant="primary">Create template</Button>
+                        </ToolbarItem>
+                        <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
+                            <Pagination
+                                itemCount={searchValue ? filteredAndSortedTemplates.length : totalCount}
+                                widgetId="templates-pagination-top"
+                                perPage={perPage}
+                                page={page}
+                                variant={PaginationVariant.top}
+                                onSetPage={(_event, newPage) => setPage(newPage)}
+                                onPerPageSelect={(_event, newPerPage) => {
+                                    setPerPage(newPerPage);
+                                    setPage(1);
+                                }}
+                                isCompact
+                            />
+                        </ToolbarItem>
+                    </ToolbarContent>
+                </Toolbar>
 
                 <Table aria-label="Templates table">
                     <Thead>
                         <Tr>
-                            <Th {...getTemplateSortParams(0)}>Name</Th>
-                            <Th {...getTemplateSortParams(1)}>Description</Th>
-                            <Th {...getTemplateSortParams(2)}>Architecture</Th>
-                            <Th {...getTemplateSortParams(3)}>Version</Th>
-                            <Th {...getTemplateSortParams(4)}>Snapshot date</Th>
-                            <Th {...getTemplateSortParams(5)}>Hosts</Th>
-                            <Th {...getTemplateSortParams(6)}>Status</Th>
+                            <Th {...getSortParams(0)}>Name</Th>
+                            <Th>Description</Th>
+                            <Th {...getSortParams(2)} style={{ whiteSpace: 'nowrap' }}>Architecture</Th>
+                            <Th {...getSortParams(3)} style={{ whiteSpace: 'nowrap' }}>OS version</Th>
+                            <Th {...getSortParams(4)} style={{ whiteSpace: 'nowrap' }}>Snapshot date</Th>
+                            <Th {...getSortParams(5)}>Status</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
@@ -312,46 +304,38 @@ const ContentManagement: React.FunctionComponent = () => {
                                     <Button
                                         variant="link"
                                         isInline
-                                        onClick={() => navigate(`/template/${template.name}`)}
-                                        style={{ padding: 0, fontSize: 'inherit' }}
+                                        onClick={() => navigate(`/template/${encodeURIComponent(template.name)}`)}
                                     >
                                         {template.name}
                                     </Button>
                                 </Td>
                                 <Td dataLabel="Description">{template.description}</Td>
                                 <Td dataLabel="Architecture">{template.architecture}</Td>
-                                <Td dataLabel="Version">{template.version}</Td>
+                                <Td dataLabel="OS version">{template.osVersion}</Td>
                                 <Td dataLabel="Snapshot date">{template.snapshotDate}</Td>
-                                <Td dataLabel="Hosts">
-                                    <a href="#" style={{ color: 'var(--pf-t--global--color--brand--default)', textDecoration: 'none' }}>
-                                        {template.numberOfHosts}
-                                    </a>
-                                </Td>
                                 <Td dataLabel="Status">
-                                    <StatusBadge status={template.status} />
+                                    <StatusDisplay status={template.status} />
                                 </Td>
                             </Tr>
                         ))}
                     </Tbody>
                 </Table>
 
-                <div style={{ marginTop: '16px' }}>
-                    <Pagination
-                        itemCount={filteredAndSortedTemplates.length}
-                        widgetId="templates-pagination-bottom"
-                        perPage={templatePerPage}
-                        page={templatePage}
-                        variant={PaginationVariant.bottom}
-                        onSetPage={(_event, newPage) => setTemplatePage(newPage)}
-                        onPerPageSelect={(_event, newPerPage) => {
-                            setTemplatePerPage(newPerPage);
-                            setTemplatePage(1);
-                        }}
-                    />
-                </div>
-            </div>
-        </div>
+                <Pagination
+                    itemCount={searchValue ? filteredAndSortedTemplates.length : totalCount}
+                    widgetId="templates-pagination-bottom"
+                    perPage={perPage}
+                    page={page}
+                    variant={PaginationVariant.bottom}
+                    onSetPage={(_event, newPage) => setPage(newPage)}
+                    onPerPageSelect={(_event, newPerPage) => {
+                        setPerPage(newPerPage);
+                        setPage(1);
+                    }}
+                />
+            </PageSection>
+        </>
     );
 };
 
-export { ContentManagement }; 
+export { ContentManagement };

@@ -5,7 +5,35 @@ body,
 }
 
 .pf-v6-c-content {
-  --pf-v6-c-content--small--Color: var(--pf-t--global--color--status--danger--default); /* changes all <small> color to the semantic token for danger */
-  --pf-v6-c-content--blockquote--BorderLeftColor: var(--pf-t--global--color--nonstatus--purple--default); /* changes all <blockquote> left border color to the semantic token for non-status (purple) */
-  --pf-v6-c-content--hr--BackgroundColor: var(--pf-t--global--color--nonstatus--yellow--default); /* changes a <hr> color to the semantic token for non-status (yellow) */
+  --pf-v6-c-content--small--Color: var(--pf-t--global--color--status--danger--default);
+  --pf-v6-c-content--blockquote--BorderLeftColor: var(--pf-t--global--color--nonstatus--purple--default);
+  --pf-v6-c-content--hr--BackgroundColor: var(--pf-t--global--color--nonstatus--yellow--default);
+}
+
+/* PF6 ToggleGroup: light blue selected state (matches PF 6.5+) */
+.pf-v6-c-toggle-group__button.pf-m-selected {
+  --pf-v6-c-toggle-group__button--m-selected--BackgroundColor: #e0f0ff;
+  --pf-v6-c-toggle-group__button--m-selected--Color: #151515;
+  background-color: #e0f0ff;
+  color: #151515;
+}
+
+.pf-v6-c-toggle-group__button.pf-m-selected:hover {
+  background-color: #cce3f5;
+  color: #151515;
+}
+
+/* Toolbar: remove bottom margin gap above table */
+.app-repositories-toolbar.pf-v6-c-toolbar {
+  margin-block-end: 0;
+}
+
+/* Filter group: 8px gap between filter select and search input */
+.app-toolbar-filter-group.pf-v6-c-toolbar__group {
+  --pf-v6-c-toolbar__group--ColumnGap: var(--pf-t--global--spacer--sm);
+}
+
+/* Repository table: top-align checkbox and text in rows with multi-line content */
+.app-repositories-table tbody td {
+  vertical-align: top;
 }

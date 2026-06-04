@@ -5,15 +5,21 @@ import {
     BreadcrumbItem,
     Button,
     Checkbox,
+    Divider,
     Dropdown,
     DropdownItem,
     DropdownList,
     Flex,
     FlexItem,
+    Icon,
+    Label,
     MenuToggle,
     MenuToggleElement,
+    PageBreadcrumb,
+    PageSection,
     Pagination,
     PaginationVariant,
+    Popover,
     SearchInput,
     Select,
     SelectList,
@@ -39,33 +45,42 @@ import {
     SortByDirection,
 } from '@patternfly/react-table';
 import {
+    ArrowDownIcon,
+    ArrowUpIcon,
     CheckCircleIcon,
     EllipsisVIcon,
-    ExclamationTriangleIcon,
+    ExclamationCircleIcon,
+    ExternalLinkAltIcon,
     FilterIcon,
-    OutlinedQuestionCircleIcon
+    FolderOpenIcon,
+    OutlinedQuestionCircleIcon,
 } from '@patternfly/react-icons';
 
-// Repositories interface and data
 interface Repository {
     id: string;
     name: string;
     url: string;
-    architecture: 'Any' | 'x86_64';
-    osVersion: 'RHEL9' | 'RHEL 8' | 'Any';
+    architecture: 'Any' | 'x86_64' | 'aarch64';
+    osVersion: 'RHEL 9' | 'RHEL 8' | 'Any';
     packages: number;
     lastIntrospection: string;
     status: 'Invalid' | 'Valid';
+    source: 'redhat' | 'custom' | 'partner';
+    lastSnapshot?: string;
+    changesAdded?: number;
+    changesRemoved?: number;
 }
 
 const generateRepositoryData = (): Repository[] => {
-    const repositories = [
-        { name: 'rhel-9-for-x86_64-baseos-rpms', url: 'https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os', architecture: 'x86_64' as const, osVersion: 'RHEL9' as const, packages: 2847, lastIntrospection: '2 hours ago', status: 'Valid' as const },
-        { name: 'rhel-9-for-x86_64-appstream-rpms', url: 'https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os', architecture: 'x86_64' as const, osVersion: 'RHEL9' as const, packages: 5926, lastIntrospection: '2 hours ago', status: 'Valid' as const },
-        { name: 'rhel-8-for-x86_64-baseos-rpms', url: 'https://cdn.redhat.com/content/dist/rhel8/8/x86_64/baseos/os', architecture: 'x86_64' as const, osVersion: 'RHEL 8' as const, packages: 1789, lastIntrospection: '4 hours ago', status: 'Valid' as const },
-        { name: 'rhel-8-for-x86_64-appstream-rpms', url: 'https://cdn.redhat.com/content/dist/rhel8/8/x86_64/appstream/os', architecture: 'x86_64' as const, osVersion: 'RHEL 8' as const, packages: 3421, lastIntrospection: '4 hours ago', status: 'Valid' as const },
-        { name: 'custom-epel-repository', url: 'https://download.fedoraproject.org/pub/epel/9/Everything/x86_64/', architecture: 'Any' as const, osVersion: 'Any' as const, packages: 12043, lastIntrospection: '1 day ago', status: 'Invalid' as const },
-        { name: 'development-tools-repo', url: 'https://internal.company.com/repos/dev-tools/', architecture: 'x86_64' as const, osVersion: 'RHEL9' as const, packages: 567, lastIntrospection: '3 days ago', status: 'Valid' as const },
+    const repositories: Omit<Repository, 'id'>[] = [
+        { name: 'rhel-9-for-x86_64-baseos-rpms', url: 'https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os', architecture: 'x86_64', osVersion: 'RHEL 9', packages: 2847, lastIntrospection: '2 hours ago', status: 'Valid', source: 'redhat', lastSnapshot: '2 hours ago', changesAdded: 5, changesRemoved: 2 },
+        { name: 'rhel-9-for-x86_64-appstream-rpms', url: 'https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os', architecture: 'x86_64', osVersion: 'RHEL 9', packages: 5926, lastIntrospection: '2 hours ago', status: 'Valid', source: 'redhat', lastSnapshot: '2 hours ago', changesAdded: 12, changesRemoved: 3 },
+        { name: 'rhel-8-for-x86_64-baseos-rpms', url: 'https://cdn.redhat.com/content/dist/rhel8/8/x86_64/baseos/os', architecture: 'x86_64', osVersion: 'RHEL 8', packages: 1789, lastIntrospection: '4 hours ago', status: 'Valid', source: 'redhat' },
+        { name: 'rhel-8-for-x86_64-appstream-rpms', url: 'https://cdn.redhat.com/content/dist/rhel8/8/x86_64/appstream/os', architecture: 'x86_64', osVersion: 'RHEL 8', packages: 3421, lastIntrospection: '4 hours ago', status: 'Valid', source: 'redhat' },
+        { name: 'EPEL 8 Everything aarch64', url: 'https://dl.fedoraproject.org/pub/epel/8/Everything/aarch64/', architecture: 'aarch64', osVersion: 'RHEL 8', packages: 12043, lastIntrospection: '1 day ago', status: 'Valid', source: 'partner', lastSnapshot: 'a day ago', changesAdded: 17, changesRemoved: 17 },
+        { name: 'EPEL 9 Everything x86_64', url: 'https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/', architecture: 'x86_64', osVersion: 'RHEL 9', packages: 9821, lastIntrospection: '1 day ago', status: 'Valid', source: 'partner', lastSnapshot: 'a day ago', changesAdded: 8, changesRemoved: 4 },
+        { name: 'custom-epel-repository', url: 'https://download.fedoraproject.org/pub/epel/9/Everything/x86_64/', architecture: 'Any', osVersion: 'Any', packages: 14203, lastIntrospection: '1 day ago', status: 'Invalid', source: 'custom' },
+        { name: 'development-tools-repo', url: 'https://internal.company.com/repos/dev-tools/', architecture: 'x86_64', osVersion: 'RHEL 9', packages: 567, lastIntrospection: '3 days ago', status: 'Valid', source: 'custom', lastSnapshot: '3 days ago' },
     ];
 
     return repositories.map((repo, index) => ({
@@ -77,32 +92,35 @@ const generateRepositoryData = (): Repository[] => {
 const Repositories: React.FunctionComponent = () => {
     const navigate = useNavigate();
 
-    // Repositories state
     const [repositories] = useState<Repository[]>(generateRepositoryData());
-    const [repositorySearchValue, setRepositorySearchValue] = useState('');
-    const [repositorySortBy, setRepositorySortBy] = useState<ISortBy>({});
-    const [repositoryPage, setRepositoryPage] = useState(1);
-    const [repositoryPerPage, setRepositoryPerPage] = useState(20);
-    const [isRepositoryFilterOpen, setIsRepositoryFilterOpen] = useState(false);
-    const [repositoryFilterBy, setRepositoryFilterBy] = useState('Name/URL');
+    const [searchValue, setSearchValue] = useState('');
+    const [sortBy, setSortBy] = useState<ISortBy>({});
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(20);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [filterBy, setFilterBy] = useState('Name/URL');
     const [selectedRepositories, setSelectedRepositories] = useState<string[]>([]);
-    const [repositoryToggle, setRepositoryToggle] = useState('Red Hat');
+    const [repoToggles, setRepoToggles] = useState<Set<string>>(new Set(['redhat']));
     const [isBulkSelectOpen, setIsBulkSelectOpen] = useState(false);
-    const [isKebabOpen, setIsKebabOpen] = useState(false);
+    const [isToolbarKebabOpen, setIsToolbarKebabOpen] = useState(false);
+    const [openRowKebab, setOpenRowKebab] = useState<string | null>(null);
 
-    // Repositories filtering and sorting
     const filteredAndSortedRepositories = useMemo(() => {
         let filtered = repositories;
 
-        if (repositorySearchValue) {
+        if (repoToggles.size > 0) {
+            filtered = filtered.filter(repo => repoToggles.has(repo.source));
+        }
+
+        if (searchValue) {
             filtered = filtered.filter(repo =>
-                repo.name.toLowerCase().includes(repositorySearchValue.toLowerCase()) ||
-                repo.url.toLowerCase().includes(repositorySearchValue.toLowerCase())
+                repo.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+                repo.url.toLowerCase().includes(searchValue.toLowerCase())
             );
         }
 
-        if (repositorySortBy.index !== undefined) {
-            const { index, direction } = repositorySortBy;
+        if (sortBy.index !== undefined) {
+            const { index, direction } = sortBy;
             filtered = [...filtered].sort((a, b) => {
                 let aValue, bValue;
                 switch (index) {
@@ -127,47 +145,33 @@ const Repositories: React.FunctionComponent = () => {
         }
 
         return filtered;
-    }, [repositories, repositorySearchValue, repositorySortBy]);
+    }, [repositories, searchValue, sortBy, repoToggles]);
 
     const paginatedRepositories = useMemo(() => {
-        const startIdx = (repositoryPage - 1) * repositoryPerPage;
-        return filteredAndSortedRepositories.slice(startIdx, startIdx + repositoryPerPage);
-    }, [filteredAndSortedRepositories, repositoryPage, repositoryPerPage]);
+        const startIdx = (page - 1) * perPage;
+        return filteredAndSortedRepositories.slice(startIdx, startIdx + perPage);
+    }, [filteredAndSortedRepositories, page, perPage]);
 
-    const getRepositorySortParams = useCallback((columnIndex: number) => {
-        return {
-            sort: {
-                sortBy: repositorySortBy,
-                onSort: (_event: any, index: number, direction: 'asc' | 'desc') => {
-                    setRepositorySortBy({ index, direction });
-                },
-                columnIndex
-            }
-        };
-    }, [repositorySortBy]);
-
-    const StatusIcon = ({ status }: { status: 'Valid' | 'Invalid' }) => {
-        if (status === 'Valid') {
-            return <CheckCircleIcon style={{ color: '#3E8635' }} />;
+    const getSortParams = useCallback((columnIndex: number) => ({
+        sort: {
+            sortBy,
+            onSort: (_event: any, index: number, direction: 'asc' | 'desc') => {
+                setSortBy({ index, direction });
+            },
+            columnIndex
         }
-        return <ExclamationTriangleIcon style={{ color: '#C9190B' }} />;
-    };
+    }), [sortBy]);
 
-    const StatusBadge = ({ status }: { status: 'Valid' | 'Invalid' }) => {
-        const color = status === 'Valid' ? '#3E8635' : '#C9190B'; // Green for Valid, Red for Invalid
-        return (
-            <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
-                <FlexItem>
-                    <StatusIcon status={status} />
-                </FlexItem>
-                <FlexItem>
-                    <span style={{ color: color, fontWeight: '600' }}>
-                        {status}
-                    </span>
-                </FlexItem>
-            </Flex>
-        );
-    };
+    const StatusDisplay = ({ status }: { status: 'Valid' | 'Invalid' }) => (
+        <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+            <FlexItem>
+                <Icon status={status === 'Valid' ? 'success' : 'danger'}>
+                    {status === 'Valid' ? <CheckCircleIcon /> : <ExclamationCircleIcon />}
+                </Icon>
+            </FlexItem>
+            <FlexItem>{status}</FlexItem>
+        </Flex>
+    );
 
     const handleSelectAll = (isSelected: boolean) => {
         if (isSelected) {
@@ -181,245 +185,328 @@ const Repositories: React.FunctionComponent = () => {
     const isAllSelected = paginatedRepositories.length > 0 && selectedRepositories.length === paginatedRepositories.length;
     const isPartiallySelected = selectedRepositories.length > 0 && selectedRepositories.length < paginatedRepositories.length;
 
-    const repositoriesToolbar = (
-        <Toolbar id="repositories-toolbar">
-            <ToolbarContent>
-                <ToolbarItem>
-                    <Dropdown
-                        isOpen={isBulkSelectOpen}
-                        onOpenChange={setIsBulkSelectOpen}
-                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                            <MenuToggle
-                                ref={toggleRef}
-                                onClick={() => setIsBulkSelectOpen(!isBulkSelectOpen)}
-                                aria-label="Bulk select"
-                            >
-                                <Checkbox
-                                    id="bulk-select-dropdown"
-                                    isChecked={isAllSelected ? true : isPartiallySelected ? null : false}
-                                    onChange={(_event, isSelected) => handleSelectAll(isSelected)}
-                                    aria-label="Select all repositories"
-                                />
-                                {selectedRepositories.length > 0 && ` ${selectedRepositories.length} selected`}
-                            </MenuToggle>
-                        )}
-                    >
-                        <DropdownList>
-                            <DropdownItem onClick={() => setSelectedRepositories([])}>
-                                Select none (0 items)
-                            </DropdownItem>
-                            <DropdownItem onClick={() => setSelectedRepositories(paginatedRepositories.map(repo => repo.id))}>
-                                Select page ({paginatedRepositories.length} items)
-                            </DropdownItem>
-                            <DropdownItem onClick={() => setSelectedRepositories(filteredAndSortedRepositories.map(repo => repo.id))}>
-                                Select all ({filteredAndSortedRepositories.length} items)
-                            </DropdownItem>
-                        </DropdownList>
-                    </Dropdown>
-                </ToolbarItem>
-                <ToolbarGroup>
-                    <ToolbarItem style={{ marginRight: '0' }}>
-                        <Select
-                            id="repository-filter-select"
-                            isOpen={isRepositoryFilterOpen}
-                            selected={repositoryFilterBy}
-                            onSelect={(_event, selection) => {
-                                setRepositoryFilterBy(selection as string);
-                                setIsRepositoryFilterOpen(false);
-                            }}
-                            onOpenChange={(isOpen) => setIsRepositoryFilterOpen(isOpen)}
-                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                                <MenuToggle ref={toggleRef} onClick={() => setIsRepositoryFilterOpen(!isRepositoryFilterOpen)}>
-                                    <FilterIcon /> {repositoryFilterBy}
-                                </MenuToggle>
-                            )}
-                        >
-                            <SelectList>
-                                <SelectOption value="Name/URL">Name/URL</SelectOption>
-                            </SelectList>
-                        </Select>
-                    </ToolbarItem>
-                    <ToolbarItem style={{ marginLeft: '8px', marginRight: '0' }}>
-                        <SearchInput
-                            placeholder="Search repositories"
-                            value={repositorySearchValue}
-                            onChange={(_event, value) => setRepositorySearchValue(value)}
-                            onClear={() => setRepositorySearchValue('')}
-                        />
-                    </ToolbarItem>
-                </ToolbarGroup>
-                <ToolbarItem>
-                    <ToggleGroup aria-label="Repository type">
-                        <ToggleGroupItem
-                            text="Custom"
-                            isSelected={repositoryToggle === 'Custom'}
-                            onChange={() => setRepositoryToggle('Custom')}
-                        />
-                        <ToggleGroupItem
-                            text="Red Hat"
-                            isSelected={repositoryToggle === 'Red Hat'}
-                            onChange={() => setRepositoryToggle('Red Hat')}
-                        />
-                    </ToggleGroup>
-                </ToolbarItem>
-                <ToolbarItem>
-                    <Button variant="primary">Add repositories</Button>
-                </ToolbarItem>
-                <ToolbarItem>
-                    <Dropdown
-                        isOpen={isKebabOpen}
-                        onOpenChange={setIsKebabOpen}
-                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                            <MenuToggle
-                                ref={toggleRef}
-                                variant="plain"
-                                onClick={() => setIsKebabOpen(!isKebabOpen)}
-                            >
-                                <EllipsisVIcon />
-                            </MenuToggle>
-                        )}
-                    >
-                        <DropdownList>
-                            <DropdownItem>Remove</DropdownItem>
-                        </DropdownList>
-                    </Dropdown>
-                </ToolbarItem>
-                <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
-                    <Pagination
-                        itemCount={filteredAndSortedRepositories.length}
-                        widgetId="repositories-pagination-top"
-                        perPage={repositoryPerPage}
-                        page={repositoryPage}
-                        variant={PaginationVariant.top}
-                        onSetPage={(_event, newPage) => setRepositoryPage(newPage)}
-                        onPerPageSelect={(_event, newPerPage) => {
-                            setRepositoryPerPage(newPerPage);
-                            setRepositoryPage(1);
-                        }}
-                        isCompact
-                    />
-                </ToolbarItem>
-            </ToolbarContent>
-        </Toolbar>
-    );
-
     return (
-        <div style={{ padding: '24px', backgroundColor: 'var(--pf-t--global--background--color--primary)' }}>
-            <Breadcrumb>
-                <BreadcrumbItem component="button" onClick={() => navigate('/content-management')}>
-                    Content management
-                </BreadcrumbItem>
-                <BreadcrumbItem isActive>Repositories</BreadcrumbItem>
-            </Breadcrumb>
+        <>
+            <PageBreadcrumb>
+                <Breadcrumb>
+                    <BreadcrumbItem>
+                        <Button variant="link" isInline onClick={() => navigate('/content-management')}>
+                            Content
+                        </Button>
+                    </BreadcrumbItem>
+                    <BreadcrumbItem>
+                        <Button variant="link" isInline onClick={() => navigate('/content-management')}>
+                            Templates
+                        </Button>
+                    </BreadcrumbItem>
+                    <BreadcrumbItem isActive>Repositories</BreadcrumbItem>
+                </Breadcrumb>
+            </PageBreadcrumb>
 
-            <div style={{ marginTop: '16px', marginBottom: '24px' }}>
-                <Flex alignItems={{ default: 'alignItemsCenter' }} justifyContent={{ default: 'justifyContentSpaceBetween' }}>
+            <PageSection aria-label="Repositories title">
+                <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsNone' }}>
                     <FlexItem>
-                        <div>
-                            <Flex alignItems={{ default: 'alignItemsCenter' }}>
-                                <FlexItem>
-                                    <Title headingLevel="h1" size="2xl" style={{ display: 'inline' }}>
-                                        Repositories
-                                    </Title>
-                                    <OutlinedQuestionCircleIcon style={{ marginLeft: '4px', color: 'var(--pf-t--global--text--color--subtle)' }} />
-                                </FlexItem>
-                            </Flex>
-                            <div style={{ marginTop: '8px' }}>
-                                <p style={{ color: 'var(--pf-t--global--text--color--subtle)', margin: '0 0 4px 0' }}>
-                                    Manage content repositories for manual snapshots and custom repository sources.
-                                </p>
+                        <Title headingLevel="h1" size="2xl">Repositories</Title>
+                    </FlexItem>
+                    <FlexItem>
+                        <Popover
+                            headerContent="About repositories"
+                            bodyContent={
                                 <div>
-                                    <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>
-                                        To manage templates and set up content patching workflows, go to
-                                    </span>
-                                    <Button
-                                        variant="link"
-                                        isInline
-                                        onClick={() => navigate('/content-management')}
-                                        style={{ padding: 0, marginLeft: '4px' }}
-                                    >
-                                        Content Management page
-                                    </Button>
-                                    <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>.</span>
+                                    <p>Manage content repositories for manual snapshots and custom repository sources.</p>
+                                    <p>To manage templates and set up content patching workflows, go to the Content Management page.</p>
                                 </div>
-                            </div>
-                        </div>
+                            }
+                            position="right"
+                        >
+                            <Button variant="plain" aria-label="Help for Repositories">
+                                <OutlinedQuestionCircleIcon />
+                            </Button>
+                        </Popover>
                     </FlexItem>
                 </Flex>
-            </div>
+                <p style={{ color: 'var(--pf-t--global--text--color--subtle)', marginTop: '8px' }}>
+                    Manage custom repositories for use within templates and content management workflows.
+                    <br />
+                    To manage templates and set up content patching workflows, go to the{' '}
+                    <Button variant="link" isInline onClick={() => navigate('/content-management')}>
+                        Templates
+                    </Button>{' '}
+                    page.
+                </p>
+            </PageSection>
 
-            {repositoriesToolbar}
-
-            <Table aria-label="Repositories table" style={{ paddingTop: '24px' }}>
-                <Thead>
-                    <Tr>
-                        <Th />
-                        <Th {...getRepositorySortParams(0)}>Name</Th>
-                        <Th {...getRepositorySortParams(1)}>Architecture</Th>
-                        <Th {...getRepositorySortParams(2)}>OS version</Th>
-                        <Th {...getRepositorySortParams(3)}>Packages</Th>
-                        <Th {...getRepositorySortParams(4)}>Last introspection</Th>
-                        <Th {...getRepositorySortParams(5)}>Status</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
-                    {paginatedRepositories.map((repository) => (
-                        <Tr key={repository.id}>
-                            <Td
-                                select={{
-                                    rowIndex: parseInt(repository.id.split('-')[1]) - 1,
-                                    onSelect: (_event, isSelected) => {
-                                        if (isSelected) {
-                                            setSelectedRepositories(prev => [...prev, repository.id]);
-                                        } else {
-                                            setSelectedRepositories(prev => prev.filter(id => id !== repository.id));
-                                        }
-                                    },
-                                    isSelected: selectedRepositories.includes(repository.id)
+            <PageSection aria-label="Repositories" isFilled>
+                <Toolbar id="repositories-toolbar" inset={{ default: 'insetNone' }} className="app-repositories-toolbar">
+                    <ToolbarContent>
+                        <ToolbarItem>
+                            <Dropdown
+                                isOpen={isBulkSelectOpen}
+                                onOpenChange={setIsBulkSelectOpen}
+                                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                    <MenuToggle
+                                        ref={toggleRef}
+                                        onClick={() => setIsBulkSelectOpen(!isBulkSelectOpen)}
+                                        aria-label="Bulk select"
+                                    >
+                                        <Checkbox
+                                            id="bulk-select-dropdown"
+                                            isChecked={isAllSelected ? true : isPartiallySelected ? null : false}
+                                            onChange={(_event, isSelected) => handleSelectAll(isSelected)}
+                                            aria-label="Select all repositories"
+                                        />
+                                        {selectedRepositories.length > 0 && ` ${selectedRepositories.length} selected`}
+                                    </MenuToggle>
+                                )}
+                            >
+                                <DropdownList>
+                                    <DropdownItem onClick={() => setSelectedRepositories([])}>
+                                        Select none (0 items)
+                                    </DropdownItem>
+                                    <DropdownItem onClick={() => setSelectedRepositories(paginatedRepositories.map(r => r.id))}>
+                                        Select page ({paginatedRepositories.length} items)
+                                    </DropdownItem>
+                                    <DropdownItem onClick={() => setSelectedRepositories(filteredAndSortedRepositories.map(r => r.id))}>
+                                        Select all ({filteredAndSortedRepositories.length} items)
+                                    </DropdownItem>
+                                </DropdownList>
+                            </Dropdown>
+                        </ToolbarItem>
+                        <ToolbarGroup className="app-toolbar-filter-group">
+                            <ToolbarItem>
+                                <Select
+                                    id="repository-filter-select"
+                                    isOpen={isFilterOpen}
+                                    selected={filterBy}
+                                    onSelect={(_event, selection) => {
+                                        setFilterBy(selection as string);
+                                        setIsFilterOpen(false);
+                                    }}
+                                    onOpenChange={(isOpen) => setIsFilterOpen(isOpen)}
+                                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                        <MenuToggle ref={toggleRef} onClick={() => setIsFilterOpen(!isFilterOpen)}>
+                                            <FilterIcon /> {filterBy}
+                                        </MenuToggle>
+                                    )}
+                                >
+                                    <SelectList>
+                                        <SelectOption value="Name/URL">Name/URL</SelectOption>
+                                    </SelectList>
+                                </Select>
+                            </ToolbarItem>
+                            <ToolbarItem>
+                                <SearchInput
+                                    placeholder="Search repositories"
+                                    value={searchValue}
+                                    onChange={(_event, value) => setSearchValue(value)}
+                                    onClear={() => setSearchValue('')}
+                                />
+                            </ToolbarItem>
+                        </ToolbarGroup>
+                        <ToolbarItem>
+                            <ToggleGroup aria-label="Repository type">
+                                <ToggleGroupItem
+                                    text="Custom"
+                                    buttonId="toggle-custom"
+                                    isSelected={repoToggles.has('custom')}
+                                    onChange={() => {
+                                        setRepoToggles(prev => {
+                                            const next = new Set(prev);
+                                            next.has('custom') ? next.delete('custom') : next.add('custom');
+                                            return next;
+                                        });
+                                        setSelectedRepositories([]); setPage(1);
+                                    }}
+                                />
+                                <ToggleGroupItem
+                                    text="Red Hat"
+                                    buttonId="toggle-redhat"
+                                    isSelected={repoToggles.has('redhat')}
+                                    onChange={() => {
+                                        setRepoToggles(prev => {
+                                            const next = new Set(prev);
+                                            next.has('redhat') ? next.delete('redhat') : next.add('redhat');
+                                            return next;
+                                        });
+                                        setSelectedRepositories([]); setPage(1);
+                                    }}
+                                />
+                                <ToggleGroupItem
+                                    text="Partner"
+                                    buttonId="toggle-partner"
+                                    isSelected={repoToggles.has('partner')}
+                                    onChange={() => {
+                                        setRepoToggles(prev => {
+                                            const next = new Set(prev);
+                                            next.has('partner') ? next.delete('partner') : next.add('partner');
+                                            return next;
+                                        });
+                                        setSelectedRepositories([]); setPage(1);
+                                    }}
+                                />
+                            </ToggleGroup>
+                        </ToolbarItem>
+                        <ToolbarItem>
+                            <Button variant="primary">Add repositories</Button>
+                        </ToolbarItem>
+                        <ToolbarItem>
+                            <Dropdown
+                                isOpen={isToolbarKebabOpen}
+                                onOpenChange={setIsToolbarKebabOpen}
+                                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                    <MenuToggle
+                                        ref={toggleRef}
+                                        variant="plain"
+                                        onClick={() => setIsToolbarKebabOpen(!isToolbarKebabOpen)}
+                                    >
+                                        <EllipsisVIcon />
+                                    </MenuToggle>
+                                )}
+                            >
+                                <DropdownList>
+                                    <DropdownItem>Remove</DropdownItem>
+                                </DropdownList>
+                            </Dropdown>
+                        </ToolbarItem>
+                        <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
+                            <Pagination
+                                itemCount={filteredAndSortedRepositories.length}
+                                widgetId="repositories-pagination-top"
+                                perPage={perPage}
+                                page={page}
+                                variant={PaginationVariant.top}
+                                onSetPage={(_event, newPage) => setPage(newPage)}
+                                onPerPageSelect={(_event, newPerPage) => {
+                                    setPerPage(newPerPage);
+                                    setPage(1);
                                 }}
+                                isCompact
                             />
-                            <Td dataLabel="Name">
-                                <div>
-                                    <div>{repository.name}</div>
-                                    <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                                        <a href={repository.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                            {repository.url}
-                                        </a>
-                                    </div>
-                                </div>
-                            </Td>
-                            <Td dataLabel="Architecture">{repository.architecture}</Td>
-                            <Td dataLabel="OS version">{repository.osVersion}</Td>
-                            <Td dataLabel="Packages">
-                                <a href="#" style={{ color: 'var(--pf-t--global--color--brand--default)', textDecoration: 'none' }}>
-                                    {repository.packages.toLocaleString()}
-                                </a>
-                            </Td>
-                            <Td dataLabel="Last introspection">{repository.lastIntrospection}</Td>
-                            <Td dataLabel="Status">
-                                <StatusBadge status={repository.status} />
-                            </Td>
-                        </Tr>
-                    ))}
-                </Tbody>
-            </Table>
+                        </ToolbarItem>
+                    </ToolbarContent>
+                </Toolbar>
 
-            <div style={{ marginTop: '16px' }}>
+                <Table aria-label="Repositories table" variant="compact" className="app-repositories-table">
+                    <Thead>
+                        <Tr>
+                            <Th />
+                            <Th {...getSortParams(0)}>Name</Th>
+                            <Th {...getSortParams(1)} width={10}>Architecture</Th>
+                            <Th {...getSortParams(2)} width={10}>OS version</Th>
+                            <Th {...getSortParams(3)} width={10}>Packages</Th>
+                            <Th {...getSortParams(4)} width={15}>Last introspection</Th>
+                            <Th {...getSortParams(5)} width={10}>Status</Th>
+                            <Th aria-label="Row actions" />
+                        </Tr>
+                    </Thead>
+                    <Tbody>
+                        {paginatedRepositories.map((repository) => (
+                            <Tr key={repository.id}>
+                                <Td
+                                    select={{
+                                        rowIndex: parseInt(repository.id.split('-')[1]) - 1,
+                                        onSelect: (_event, isSelected) => {
+                                            if (isSelected) {
+                                                setSelectedRepositories(prev => [...prev, repository.id]);
+                                            } else {
+                                                setSelectedRepositories(prev => prev.filter(id => id !== repository.id));
+                                            }
+                                        },
+                                        isSelected: selectedRepositories.includes(repository.id)
+                                    }}
+                                />
+                                <Td dataLabel="Name">
+                                    <div>
+                                        <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                                            <FlexItem>{repository.name}</FlexItem>
+                                            {repository.source === 'partner' && (
+                                                <FlexItem>
+                                                    <Label color="grey" isCompact icon={<FolderOpenIcon />}>Partner</Label>
+                                                </FlexItem>
+                                            )}
+                                        </Flex>
+                                        <div style={{ fontSize: '0.875rem' }}>
+                                            <a href={repository.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--pf-t--global--color--brand--default)', textDecoration: 'none' }}>
+                                                {repository.url}{' '}
+                                                <ExternalLinkAltIcon style={{ fontSize: '0.75em' }} />
+                                            </a>
+                                        </div>
+                                        {repository.lastSnapshot && (
+                                            <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+                                                Last snapshot {repository.lastSnapshot}
+                                                {repository.changesAdded !== undefined && (
+                                                    <span style={{ marginLeft: '16px' }}>
+                                                        Changes:{' '}
+                                                        <ArrowUpIcon style={{ color: 'var(--pf-t--global--color--status--success--default)', fontSize: '0.85em' }} />{' '}
+                                                        <span style={{ color: 'var(--pf-t--global--color--status--success--default)' }}>{repository.changesAdded}</span>
+                                                        {'  '}
+                                                        <ArrowDownIcon style={{ color: 'var(--pf-t--global--color--status--danger--default)', fontSize: '0.85em' }} />{' '}
+                                                        <span style={{ color: 'var(--pf-t--global--color--status--danger--default)' }}>{repository.changesRemoved}</span>
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </Td>
+                                <Td dataLabel="Architecture">{repository.architecture}</Td>
+                                <Td dataLabel="OS version">{repository.osVersion}</Td>
+                                <Td dataLabel="Packages">
+                                    <a href="#" style={{ color: 'var(--pf-t--global--color--brand--default)', textDecoration: 'none' }}>
+                                        {repository.packages.toLocaleString()}
+                                    </a>
+                                </Td>
+                                <Td dataLabel="Last introspection">{repository.lastIntrospection}</Td>
+                                <Td dataLabel="Status">
+                                    <StatusDisplay status={repository.status} />
+                                </Td>
+                                <Td isActionCell>
+                                    <Dropdown
+                                        isOpen={openRowKebab === repository.id}
+                                        onOpenChange={(isOpen) => setOpenRowKebab(isOpen ? repository.id : null)}
+                                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                            <MenuToggle
+                                                ref={toggleRef}
+                                                variant="plain"
+                                                onClick={() => setOpenRowKebab(openRowKebab === repository.id ? null : repository.id)}
+                                                aria-label={`Actions for ${repository.name}`}
+                                            >
+                                                <EllipsisVIcon />
+                                            </MenuToggle>
+                                        )}
+                                        popperProps={{ position: 'right' }}
+                                    >
+                                        <DropdownList>
+                                            <DropdownItem onClick={() => setOpenRowKebab(null)}>Edit</DropdownItem>
+                                            <DropdownItem onClick={() => setOpenRowKebab(null)}>Introspect now</DropdownItem>
+                                            <DropdownItem onClick={() => setOpenRowKebab(null)}>View all snapshots</DropdownItem>
+                                            <DropdownItem onClick={() => setOpenRowKebab(null)}>Trigger snapshot</DropdownItem>
+                                        </DropdownList>
+                                        <Divider />
+                                        <DropdownList>
+                                            <DropdownItem onClick={() => setOpenRowKebab(null)} isDanger>Delete</DropdownItem>
+                                        </DropdownList>
+                                    </Dropdown>
+                                </Td>
+                            </Tr>
+                        ))}
+                    </Tbody>
+                </Table>
+
                 <Pagination
                     itemCount={filteredAndSortedRepositories.length}
                     widgetId="repositories-pagination-bottom"
-                    perPage={repositoryPerPage}
-                    page={repositoryPage}
+                    perPage={perPage}
+                    page={page}
                     variant={PaginationVariant.bottom}
-                    onSetPage={(_event, newPage) => setRepositoryPage(newPage)}
+                    onSetPage={(_event, newPage) => setPage(newPage)}
                     onPerPageSelect={(_event, newPerPage) => {
-                        setRepositoryPerPage(newPerPage);
-                        setRepositoryPage(1);
+                        setPerPage(newPerPage);
+                        setPage(1);
                     }}
                 />
-            </div>
-        </div>
+            </PageSection>
+        </>
     );
 };
 
-export { Repositories }; 
+export { Repositories };

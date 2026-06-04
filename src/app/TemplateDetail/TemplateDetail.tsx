@@ -1,28 +1,41 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-    Badge,
     Breadcrumb,
     BreadcrumbItem,
     Button,
     Checkbox,
+    DescriptionList,
+    DescriptionListDescription,
+    DescriptionListGroup,
+    DescriptionListTerm,
     Dropdown,
     DropdownItem,
     DropdownList,
     Flex,
     FlexItem,
+    Grid,
+    GridItem,
+    Label,
     MenuToggle,
     MenuToggleElement,
+    PageBreadcrumb,
+    PageSection,
     Pagination,
     PaginationVariant,
     SearchInput,
+    Select,
+    SelectList,
+    SelectOption,
     Tab,
+    TabContent,
     TabTitleText,
     Tabs,
     Title,
     Toolbar,
     ToolbarContent,
-    ToolbarItem
+    ToolbarItem,
+    Tooltip
 } from '@patternfly/react-core';
 import {
     Table,
@@ -37,151 +50,129 @@ import {
     SortByDirection,
 } from '@patternfly/react-table';
 import {
-    TagIcon
+    CopyIcon,
+    EllipsisVIcon,
+    FilterIcon,
+    OutlinedClockIcon
 } from '@patternfly/react-icons';
 
-// System interface for the template detail page
 interface System {
     id: string;
     name: string;
-    tags: string[];
-    os: string;
     workspace: string;
-    installableAdvisories: number;
-    applicableAdvisories: number;
+    tags: string;
+    os: string;
     lastSeen: string;
+    firstImpacted: string;
 }
 
-const generateSystemData = (): System[] => {
-    const systems = [
-        { name: 'joe-jenkins-tasks-rhel-89-prod', tags: [], os: 'RHEL 8.9', workspace: 'Ungrouped Hosts', installableAdvisories: 2, applicableAdvisories: 290, lastSeen: '7 hours ago' },
-        { name: 'web-server-01.example.com', tags: ['production', 'web'], os: 'RHEL 9.2', workspace: 'Production Servers', installableAdvisories: 5, applicableAdvisories: 142, lastSeen: '2 hours ago' },
-        { name: 'db-primary-rhel8', tags: ['database', 'critical'], os: 'RHEL 8.8', workspace: 'Database Cluster', installableAdvisories: 12, applicableAdvisories: 87, lastSeen: '1 hour ago' },
-        { name: 'app-worker-node-03', tags: ['worker'], os: 'RHEL 9.1', workspace: 'Application Servers', installableAdvisories: 8, applicableAdvisories: 156, lastSeen: '4 hours ago' },
-        { name: 'monitoring-host-beta', tags: ['monitoring', 'beta'], os: 'RHEL 8.9', workspace: 'Infrastructure', installableAdvisories: 3, applicableAdvisories: 201, lastSeen: '30 minutes ago' },
-        { name: 'backup-server-02', tags: ['backup'], os: 'RHEL 9.0', workspace: 'Backup Systems', installableAdvisories: 15, applicableAdvisories: 98, lastSeen: '6 hours ago' },
-        { name: 'dev-test-environment', tags: ['development', 'testing'], os: 'RHEL 8.7', workspace: 'Development', installableAdvisories: 0, applicableAdvisories: 67, lastSeen: '1 day ago' },
-        { name: 'load-balancer-01', tags: ['network', 'production'], os: 'RHEL 9.2', workspace: 'Network Infrastructure', installableAdvisories: 4, applicableAdvisories: 123, lastSeen: '3 hours ago' },
-    ];
+const generateSystemData = (): System[] => [
+    { id: 'sys-1', name: 'web-frontend', workspace: 'AWS', tags: 'prod', os: 'RHEL 9', lastSeen: '15 minutes ago', firstImpacted: 'Mar 1, 2025' },
+    { id: 'sys-2', name: 'data-processor', workspace: 'Azure', tags: 'staging', os: 'RHEL 8', lastSeen: 'Aug 25, 2025', firstImpacted: 'Feb 12, 2025' },
+    { id: 'sys-3', name: 'api-gateway', workspace: 'GCP', tags: 'prod', os: 'RHEL 10', lastSeen: '2 hours ago', firstImpacted: 'Jan 5, 2025' },
+    { id: 'sys-4', name: 'batch-worker', workspace: 'Bare metal', tags: '–', os: 'RHEL 9', lastSeen: 'Yesterday', firstImpacted: 'Dec 18, 2024' },
+    { id: 'sys-5', name: 'cache-service', workspace: 'AWS', tags: 'dev', os: 'RHEL 8', lastSeen: 'Mar 20, 2025', firstImpacted: 'Nov 3, 2024' },
+];
 
-    return systems.map((system, index) => ({
-        id: `system-${index + 1}`,
-        ...system
-    }));
-};
+interface TemplateMetadata {
+    name: string;
+    osLabel: string;
+    archLabel: string;
+    snapshotDate: string;
+    createdBy: string;
+    created: string;
+    lastEditedBy: string;
+    lastEdited: string;
+}
+
+const getTemplateMetadata = (templateName: string): TemplateMetadata => ({
+    name: templateName,
+    osLabel: 'RHEL 9',
+    archLabel: 'aarch64',
+    snapshotDate: 'Using latest content from repositories',
+    createdBy: 'insights-qa',
+    created: '07 Jan 2026',
+    lastEditedBy: 'insights-qa',
+    lastEdited: '07 Jan 2026',
+});
 
 const TemplateDetail: React.FunctionComponent = () => {
     const navigate = useNavigate();
     const { templateName } = useParams<{ templateName: string }>();
+    const decodedName = decodeURIComponent(templateName || 'stepan-template-rhel9');
+    const templateData = getTemplateMetadata(decodedName);
 
-    // Mock template data
-    const templateData = {
-        name: templateName || 'Production Security Updates',
-        tags: [
-            { label: 'el8', count: 0 },
-            { label: 'x86_64', count: 1 }
-        ],
-        snapshotDate: '21 Mar 2024',
-        createdBy: 'insights-qa',
-        created: '04 Mar 2025',
-        lastEdited: '04 Mar 2025',
-        lastEditedBy: 'insights-qa'
-    };
-
-    // Systems state
     const [systems] = useState<System[]>(generateSystemData());
-    const [systemSearchValue, setSystemSearchValue] = useState('');
-    const [systemSortBy, setSystemSortBy] = useState<ISortBy>({});
-    const [systemPage, setSystemPage] = useState(1);
-    const [systemPerPage, setSystemPerPage] = useState(20);
-    const [activeTab, setActiveTab] = useState('systems');
-    const [isActionsOpen, setIsActionsOpen] = useState(false);
+    const [searchValue, setSearchValue] = useState('');
+    const [sortBy, setSortBy] = useState<ISortBy>({});
+    const [currentPage, setCurrentPage] = useState(1);
+    const [perPage, setPerPage] = useState(20);
+    const [activeTab, setActiveTab] = useState<string | number>(1);
     const [selectedSystems, setSelectedSystems] = useState<string[]>([]);
     const [isBulkSelectOpen, setIsBulkSelectOpen] = useState(false);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [filterBy, setFilterBy] = useState('Name');
+    const [isKebabOpen, setIsKebabOpen] = useState(false);
 
-    // Filter and sort systems
     const filteredAndSortedSystems = useMemo(() => {
         let filtered = systems;
 
-        if (systemSearchValue) {
+        if (searchValue) {
             filtered = systems.filter(system =>
-                system.name.toLowerCase().includes(systemSearchValue.toLowerCase())
+                system.name.toLowerCase().includes(searchValue.toLowerCase())
             );
         }
 
-        if (systemSortBy.index !== undefined) {
+        if (sortBy.index !== undefined) {
             filtered = [...filtered].sort((a, b) => {
-                const aValue = systemSortBy.index === 0 ? a.name :
-                    systemSortBy.index === 1 ? a.tags.join(', ') :
-                        systemSortBy.index === 2 ? a.os :
-                            systemSortBy.index === 3 ? a.workspace :
-                                systemSortBy.index === 4 ? a.installableAdvisories :
-                                    systemSortBy.index === 5 ? a.applicableAdvisories :
-                                        a.lastSeen;
-
-                const bValue = systemSortBy.index === 0 ? b.name :
-                    systemSortBy.index === 1 ? b.tags.join(', ') :
-                        systemSortBy.index === 2 ? b.os :
-                            systemSortBy.index === 3 ? b.workspace :
-                                systemSortBy.index === 4 ? b.installableAdvisories :
-                                    systemSortBy.index === 5 ? b.applicableAdvisories :
-                                        b.lastSeen;
-
-                if (typeof aValue === 'number' && typeof bValue === 'number') {
-                    return systemSortBy.direction === SortByDirection.asc ? aValue - bValue : bValue - aValue;
+                let aValue: string, bValue: string;
+                switch (sortBy.index) {
+                    case 0: aValue = a.name; bValue = b.name; break;
+                    case 1: aValue = a.workspace; bValue = b.workspace; break;
+                    case 2: aValue = a.tags; bValue = b.tags; break;
+                    case 3: aValue = a.os; bValue = b.os; break;
+                    case 4: aValue = a.lastSeen; bValue = b.lastSeen; break;
+                    case 5: aValue = a.firstImpacted; bValue = b.firstImpacted; break;
+                    default: return 0;
                 }
-
-                const aStr = String(aValue);
-                const bStr = String(bValue);
-
-                return systemSortBy.direction === SortByDirection.asc
-                    ? aStr.localeCompare(bStr)
-                    : bStr.localeCompare(aStr);
+                const result = aValue.localeCompare(bValue);
+                return sortBy.direction === SortByDirection.asc ? result : -result;
             });
         }
 
         return filtered;
-    }, [systems, systemSearchValue, systemSortBy]);
+    }, [systems, searchValue, sortBy]);
 
-    // Pagination
     const paginatedSystems = useMemo(() => {
-        const startIdx = (systemPage - 1) * systemPerPage;
-        return filteredAndSortedSystems.slice(startIdx, startIdx + systemPerPage);
-    }, [filteredAndSortedSystems, systemPage, systemPerPage]);
+        const startIdx = (currentPage - 1) * perPage;
+        return filteredAndSortedSystems.slice(startIdx, startIdx + perPage);
+    }, [filteredAndSortedSystems, currentPage, perPage]);
 
-    const getSystemSortParams = useCallback((columnIndex: number) => ({
+    const getSortParams = useCallback((columnIndex: number) => ({
         sort: {
-            sortBy: systemSortBy,
+            sortBy,
             onSort: (_event: any, index: number, direction: SortByDirection) => {
-                setSystemSortBy({ index, direction });
+                setSortBy({ index, direction });
             },
             columnIndex
         }
-    }), [systemSortBy]);
+    }), [sortBy]);
 
-    const onSystemSearchChange = useCallback((_event: React.FormEvent<HTMLInputElement>, value: string) => {
-        setSystemSearchValue(value);
-        setSystemPage(1);
-    }, []);
-
-    // Bulk selection handlers
     const onSystemSelect = useCallback((systemId: string, isSelected: boolean) => {
         setSelectedSystems(prev =>
-            isSelected
-                ? [...prev, systemId]
-                : prev.filter(id => id !== systemId)
+            isSelected ? [...prev, systemId] : prev.filter(id => id !== systemId)
         );
     }, []);
 
     const selectAllSystems = useCallback(() => {
-        setSelectedSystems(paginatedSystems.map(system => system.id));
+        setSelectedSystems(paginatedSystems.map(s => s.id));
     }, [paginatedSystems]);
 
     const selectNone = useCallback(() => {
         setSelectedSystems([]);
     }, []);
 
-    const areAllSystemsSelected = paginatedSystems.length > 0 && selectedSystems.length === paginatedSystems.length;
+    const areAllSelected = paginatedSystems.length > 0 && selectedSystems.length === paginatedSystems.length;
 
     const systemsToolbar = (
         <Toolbar id="systems-toolbar">
@@ -190,34 +181,28 @@ const TemplateDetail: React.FunctionComponent = () => {
                     <Dropdown
                         isOpen={isBulkSelectOpen}
                         onSelect={() => setIsBulkSelectOpen(false)}
-                        onOpenChange={(isOpen: boolean) => setIsBulkSelectOpen(isOpen)}
+                        onOpenChange={(isOpen) => setIsBulkSelectOpen(isOpen)}
                         toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                             <MenuToggle
                                 ref={toggleRef}
                                 onClick={() => setIsBulkSelectOpen(!isBulkSelectOpen)}
                                 isExpanded={isBulkSelectOpen}
+                                splitButtonItems={[
+                                    <Checkbox
+                                        key="bulk-check"
+                                        id="bulk-select-checkbox"
+                                        isChecked={areAllSelected}
+                                        onChange={(_event, checked) => checked ? selectAllSystems() : selectNone()}
+                                        aria-label="Select all systems"
+                                    />
+                                ]}
                             >
-                                <Checkbox
-                                    id="bulk-select-checkbox"
-                                    isChecked={areAllSystemsSelected}
-                                    onChange={(checked) => {
-                                        if (checked) {
-                                            selectAllSystems();
-                                        } else {
-                                            selectNone();
-                                        }
-                                    }}
-                                    aria-label="Select all systems"
-                                    style={{ marginRight: '8px' }}
-                                />
-                                {selectedSystems.length > 0 ? `${selectedSystems.length} selected` : 'Select'}
+                                {selectedSystems.length > 0 ? `${selectedSystems.length} selected` : ''}
                             </MenuToggle>
                         )}
                     >
                         <DropdownList>
-                            <DropdownItem key="select-none" onClick={selectNone}>
-                                Select none
-                            </DropdownItem>
+                            <DropdownItem key="select-none" onClick={selectNone}>Select none</DropdownItem>
                             <DropdownItem key="select-page" onClick={selectAllSystems}>
                                 Select page ({paginatedSystems.length} items)
                             </DropdownItem>
@@ -228,36 +213,77 @@ const TemplateDetail: React.FunctionComponent = () => {
                     </Dropdown>
                 </ToolbarItem>
                 <ToolbarItem>
+                    <Select
+                        id="system-filter-select"
+                        isOpen={isFilterOpen}
+                        selected={filterBy}
+                        onSelect={(_event, selection) => {
+                            setFilterBy(selection as string);
+                            setIsFilterOpen(false);
+                        }}
+                        onOpenChange={(isOpen) => setIsFilterOpen(isOpen)}
+                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                            <MenuToggle ref={toggleRef} onClick={() => setIsFilterOpen(!isFilterOpen)}>
+                                <FilterIcon /> {filterBy}
+                            </MenuToggle>
+                        )}
+                    >
+                        <SelectList>
+                            <SelectOption value="Name">Name</SelectOption>
+                            <SelectOption value="Workspace">Workspace</SelectOption>
+                            <SelectOption value="OS">OS</SelectOption>
+                        </SelectList>
+                    </Select>
+                </ToolbarItem>
+                <ToolbarItem>
                     <SearchInput
                         placeholder="Filter by name"
-                        value={systemSearchValue}
-                        onChange={onSystemSearchChange}
-                        onClear={() => {
-                            setSystemSearchValue('');
-                            setSystemPage(1);
-                        }}
-                        style={{ minWidth: '250px' }}
+                        value={searchValue}
+                        onChange={(_event, value) => { setSearchValue(value); setCurrentPage(1); }}
+                        onClear={() => { setSearchValue(''); setCurrentPage(1); }}
                     />
                 </ToolbarItem>
                 <ToolbarItem>
-                    <Button variant="primary" isDisabled={selectedSystems.length === 0}>
-                        Plan remediation
-                    </Button>
+                    <Button variant="primary" isDisabled={selectedSystems.length === 0}>Plan remediation</Button>
                 </ToolbarItem>
                 <ToolbarItem>
-                    <Button variant="secondary">Assign template to systems</Button>
+                    <Tooltip content="Export">
+                        <Button variant="plain" aria-label="Export">
+                            <CopyIcon />
+                        </Button>
+                    </Tooltip>
+                </ToolbarItem>
+                <ToolbarItem>
+                    <Dropdown
+                        isOpen={isKebabOpen}
+                        onOpenChange={setIsKebabOpen}
+                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                            <MenuToggle
+                                ref={toggleRef}
+                                variant="plain"
+                                onClick={() => setIsKebabOpen(!isKebabOpen)}
+                                aria-label="Actions"
+                            >
+                                <EllipsisVIcon />
+                            </MenuToggle>
+                        )}
+                    >
+                        <DropdownList>
+                            <DropdownItem>Export as CSV</DropdownItem>
+                        </DropdownList>
+                    </Dropdown>
                 </ToolbarItem>
                 <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>
                     <Pagination
                         itemCount={filteredAndSortedSystems.length}
                         widgetId="systems-pagination-top"
-                        perPage={systemPerPage}
-                        page={systemPage}
+                        perPage={perPage}
+                        page={currentPage}
                         variant={PaginationVariant.top}
-                        onSetPage={(_event, newPage) => setSystemPage(newPage)}
+                        onSetPage={(_event, newPage) => setCurrentPage(newPage)}
                         onPerPageSelect={(_event, newPerPage) => {
-                            setSystemPerPage(newPerPage);
-                            setSystemPage(1);
+                            setPerPage(newPerPage);
+                            setCurrentPage(1);
                         }}
                         isCompact
                     />
@@ -266,189 +292,162 @@ const TemplateDetail: React.FunctionComponent = () => {
         </Toolbar>
     );
 
+    const repositoriesTabRef = React.createRef<HTMLElement>();
+    const systemsTabRef = React.createRef<HTMLElement>();
+
     return (
-        <div style={{ padding: '24px', backgroundColor: 'var(--pf-t--global--background--color--primary)' }}>
-            <Breadcrumb>
-                <BreadcrumbItem>
-                    <Button
-                        variant="link"
-                        isInline
-                        onClick={() => navigate('/content-management')}
-                        style={{ padding: 0, fontSize: 'inherit' }}
-                    >
-                        Content
-                    </Button>
-                </BreadcrumbItem>
-                <BreadcrumbItem>
-                    <Button
-                        variant="link"
-                        isInline
-                        onClick={() => navigate('/content-management')}
-                        style={{ padding: 0, fontSize: 'inherit' }}
-                    >
-                        Templates
-                    </Button>
-                </BreadcrumbItem>
-                <BreadcrumbItem isActive>{templateData.name}</BreadcrumbItem>
-            </Breadcrumb>
+        <>
+            <PageBreadcrumb>
+                <Breadcrumb>
+                    <BreadcrumbItem to="#">RHEL</BreadcrumbItem>
+                    <BreadcrumbItem>
+                        <Button variant="link" isInline onClick={() => navigate('/content-management')}>
+                            Content
+                        </Button>
+                    </BreadcrumbItem>
+                    <BreadcrumbItem>
+                        <Button variant="link" isInline onClick={() => navigate('/content-management')}>
+                            Templates
+                        </Button>
+                    </BreadcrumbItem>
+                    <BreadcrumbItem isActive>{templateData.name}</BreadcrumbItem>
+                </Breadcrumb>
+            </PageBreadcrumb>
 
-            <div style={{ marginTop: '16px', marginBottom: '24px' }}>
-                <Flex alignItems={{ default: 'alignItemsCenter' }}>
-                    <FlexItem>
-                        <Flex alignItems={{ default: 'alignItemsCenter' }}>
+            <PageSection aria-label="Template detail">
+                <Flex direction={{ default: 'column' }}>
+                    <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsFlexStart' }}>
+                        <Flex spaceItems={{ default: 'spaceItemsMd' }} alignItems={{ default: 'alignItemsCenter' }} wrap={{ default: 'wrap' }}>
                             <FlexItem>
-                                <Title headingLevel="h1" size="2xl">
-                                    {templateData.name}
-                                </Title>
+                                <Title headingLevel="h1" size="2xl" className="pf-v6-u-mb-0">{templateData.name}</Title>
                             </FlexItem>
-                            {templateData.tags.map((tag, index) => (
-                                <FlexItem key={index}>
-                                    <Badge style={{ marginLeft: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <TagIcon style={{ fontSize: '12px' }} />
-                                        {tag.label}
-                                        <span style={{
-                                            marginLeft: '4px',
-                                            backgroundColor: 'var(--pf-t--global--background--color--secondary)',
-                                            borderRadius: '4px',
-                                            padding: '0 4px',
-                                            fontSize: '0.75rem'
-                                        }}>
-                                            {tag.count}
-                                        </span>
-                                    </Badge>
-                                </FlexItem>
-                            ))}
+                            <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }}>
+                                <FlexItem><Label color="blue">{templateData.osLabel}</Label></FlexItem>
+                                <FlexItem><Label color="blue">{templateData.archLabel}</Label></FlexItem>
+                            </Flex>
                         </Flex>
-                    </FlexItem>
-                    <FlexItem align={{ default: 'alignRight' }}>
-                        <Dropdown
-                            isOpen={isActionsOpen}
-                            onSelect={() => setIsActionsOpen(false)}
-                            onOpenChange={(isOpen: boolean) => setIsActionsOpen(isOpen)}
-                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                                <MenuToggle
-                                    ref={toggleRef}
-                                    aria-label="Actions dropdown"
-                                    onClick={() => setIsActionsOpen(!isActionsOpen)}
-                                    isExpanded={isActionsOpen}
-                                >
-                                    Actions
-                                </MenuToggle>
-                            )}
-                        >
-                            <DropdownList>
-                                <DropdownItem key="integrate-cli">Integrate via CLI</DropdownItem>
-                                <DropdownItem key="edit">Edit</DropdownItem>
-                                <DropdownItem key="delete">Delete</DropdownItem>
-                            </DropdownList>
-                        </Dropdown>
-                    </FlexItem>
-                </Flex>
-
-                <div style={{ marginTop: '8px', fontSize: '14px', color: 'var(--pf-t--global--text--color--subtle)' }}>
-                    <Flex>
-                        <FlexItem flex={{ default: 'flex_1' }}>
-                            <div>Snapshot date: {templateData.snapshotDate}</div>
-                            <div>Created by: {templateData.createdBy}</div>
-                            <div>Created: {templateData.created}</div>
-                        </FlexItem>
-                        <FlexItem flex={{ default: 'flex_1' }}>
-                            <div>Last edited: {templateData.lastEdited}</div>
-                            <div>Last edited by: {templateData.lastEditedBy}</div>
+                        <FlexItem>
+                            <Button variant="secondary">Edit</Button>
                         </FlexItem>
                     </Flex>
-                </div>
-            </div>
 
-            <Tabs
-                activeKey={activeTab}
-                onSelect={(_event, tabIndex) => setActiveTab(tabIndex as string)}
-                style={{ marginBottom: '24px' }}
-            >
-                <Tab eventKey="content" title={<TabTitleText>Content</TabTitleText>}>
-                    <div style={{ padding: '16px' }}>
-                        <p>Content tab content goes here...</p>
+                    <Grid hasGutter className="pf-v6-u-mt-sm pf-v6-u-mb-sm">
+                        <GridItem span={4}>
+                            <DescriptionList isCompact aria-label="Snapshot and author">
+                                <DescriptionListGroup>
+                                    <DescriptionListTerm>Snapshot date</DescriptionListTerm>
+                                    <DescriptionListDescription>{templateData.snapshotDate}</DescriptionListDescription>
+                                </DescriptionListGroup>
+                                <DescriptionListGroup>
+                                    <DescriptionListTerm>Created by</DescriptionListTerm>
+                                    <DescriptionListDescription>{templateData.createdBy}</DescriptionListDescription>
+                                </DescriptionListGroup>
+                            </DescriptionList>
+                        </GridItem>
+                        <GridItem span={4}>
+                            <DescriptionList isCompact aria-label="Created">
+                                <DescriptionListGroup>
+                                    <DescriptionListTerm>Created</DescriptionListTerm>
+                                    <DescriptionListDescription>{templateData.created}</DescriptionListDescription>
+                                </DescriptionListGroup>
+                            </DescriptionList>
+                        </GridItem>
+                        <GridItem span={4}>
+                            <DescriptionList isCompact aria-label="Last edited">
+                                <DescriptionListGroup>
+                                    <DescriptionListTerm>Last edited by</DescriptionListTerm>
+                                    <DescriptionListDescription>{templateData.lastEditedBy}</DescriptionListDescription>
+                                </DescriptionListGroup>
+                                <DescriptionListGroup>
+                                    <DescriptionListTerm>Last edited</DescriptionListTerm>
+                                    <DescriptionListDescription>{templateData.lastEdited}</DescriptionListDescription>
+                                </DescriptionListGroup>
+                            </DescriptionList>
+                        </GridItem>
+                    </Grid>
+                </Flex>
+            </PageSection>
+
+            <PageSection type="tabs" aria-label="Template tabs" isFilled>
+                <Tabs
+                    activeKey={activeTab}
+                    onSelect={(_event, tabIndex) => setActiveTab(tabIndex)}
+                    usePageInsets
+                >
+                    <Tab eventKey={0} title={<TabTitleText>Repositories</TabTitleText>} tabContentRef={repositoriesTabRef} />
+                    <Tab eventKey={1} title={<TabTitleText>Systems</TabTitleText>} tabContentRef={systemsTabRef} />
+                </Tabs>
+                <TabContent eventKey={0} ref={repositoriesTabRef} hidden={activeTab !== 0}>
+                    <div className="pf-v6-u-p-lg">
+                        <p>Repositories linked to this template will appear here.</p>
                     </div>
-                </Tab>
-                <Tab eventKey="systems" title={<TabTitleText>Systems</TabTitleText>}>
-                    <div>
-                        {systemsToolbar}
+                </TabContent>
+                <TabContent eventKey={1} ref={systemsTabRef} hidden={activeTab !== 1} className="pf-v6-u-pt-md">
+                    {systemsToolbar}
 
-                        <Table aria-label="Systems table">
-                            <Thead>
-                                <Tr>
-                                    <Th></Th>
-                                    <Th {...getSystemSortParams(0)}>Name</Th>
-                                    <Th {...getSystemSortParams(1)}>Tags</Th>
-                                    <Th {...getSystemSortParams(2)}>OS</Th>
-                                    <Th {...getSystemSortParams(3)}>Workspace</Th>
-                                    <Th {...getSystemSortParams(4)}>Installable advisories</Th>
-                                    <Th {...getSystemSortParams(5)}>Applicable advisories</Th>
-                                    <Th {...getSystemSortParams(6)}>Last seen</Th>
+                    <Table aria-label="Systems table">
+                        <Thead>
+                            <Tr>
+                                <Th />
+                                <Th {...getSortParams(0)}>Name</Th>
+                                <Th {...getSortParams(1)}>Workspace</Th>
+                                <Th {...getSortParams(2)}>Tags</Th>
+                                <Th {...getSortParams(3)}>OS</Th>
+                                <Th {...getSortParams(4)} info={{
+                                    tooltip: 'The last time a check-in was received from this system',
+                                    tooltipProps: { isContentLeftAligned: true }
+                                }}>
+                                    Last seen{' '}
+                                    <OutlinedClockIcon style={{ marginLeft: '4px', fontSize: '0.85em', verticalAlign: 'middle' }} />
+                                </Th>
+                                <Th {...getSortParams(5)}>First impacted</Th>
+                            </Tr>
+                        </Thead>
+                        <Tbody>
+                            {paginatedSystems.map((system) => (
+                                <Tr key={system.id}>
+                                    <Td
+                                        select={{
+                                            rowIndex: parseInt(system.id.split('-')[1]) - 1,
+                                            onSelect: (_event, isSelected) => onSystemSelect(system.id, isSelected),
+                                            isSelected: selectedSystems.includes(system.id)
+                                        }}
+                                    />
+                                    <Td dataLabel="Name">
+                                        <Button variant="link" isInline>{system.name}</Button>
+                                    </Td>
+                                    <Td dataLabel="Workspace">{system.workspace}</Td>
+                                    <Td dataLabel="Tags">
+                                        {system.tags === '–' ? (
+                                            <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>–</span>
+                                        ) : (
+                                            system.tags
+                                        )}
+                                    </Td>
+                                    <Td dataLabel="OS">{system.os}</Td>
+                                    <Td dataLabel="Last seen">{system.lastSeen}</Td>
+                                    <Td dataLabel="First impacted">{system.firstImpacted}</Td>
                                 </Tr>
-                            </Thead>
-                            <Tbody>
-                                {paginatedSystems.map((system) => (
-                                    <Tr key={system.id}>
-                                        <Td>
-                                            <Checkbox
-                                                id={`checkbox-${system.id}`}
-                                                isChecked={selectedSystems.includes(system.id)}
-                                                onChange={(event) => onSystemSelect(system.id, event.currentTarget.checked)}
-                                                aria-label={`Select ${system.name}`}
-                                            />
-                                        </Td>
-                                        <Td dataLabel="Name">
-                                            <a href="#" style={{ color: 'var(--pf-t--global--color--brand--default)', textDecoration: 'none' }}>
-                                                {system.name}
-                                            </a>
-                                        </Td>
-                                        <Td dataLabel="Tags">
-                                            {system.tags.length > 0 ? (
-                                                system.tags.map((tag, index) => (
-                                                    <Badge key={index} style={{ marginRight: '4px' }}>{tag}</Badge>
-                                                ))
-                                            ) : (
-                                                <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>—</span>
-                                            )}
-                                        </Td>
-                                        <Td dataLabel="OS">{system.os}</Td>
-                                        <Td dataLabel="Workspace">
-                                            <a href="#" style={{ color: 'var(--pf-t--global--color--brand--default)', textDecoration: 'none' }}>
-                                                {system.workspace}
-                                            </a>
-                                        </Td>
-                                        <Td dataLabel="Installable advisories">
-                                            <a href="#" style={{ color: 'var(--pf-t--global--color--brand--default)', textDecoration: 'none' }}>
-                                                {system.installableAdvisories}
-                                            </a>
-                                        </Td>
-                                        <Td dataLabel="Applicable advisories">{system.applicableAdvisories}</Td>
-                                        <Td dataLabel="Last seen">{system.lastSeen}</Td>
-                                    </Tr>
-                                ))}
-                            </Tbody>
-                        </Table>
+                            ))}
+                        </Tbody>
+                    </Table>
 
-                        <div style={{ marginTop: '16px' }}>
-                            <Pagination
-                                itemCount={filteredAndSortedSystems.length}
-                                widgetId="systems-pagination-bottom"
-                                perPage={systemPerPage}
-                                page={systemPage}
-                                variant={PaginationVariant.bottom}
-                                onSetPage={(_event, newPage) => setSystemPage(newPage)}
-                                onPerPageSelect={(_event, newPerPage) => {
-                                    setSystemPerPage(newPerPage);
-                                    setSystemPage(1);
-                                }}
-                            />
-                        </div>
-                    </div>
-                </Tab>
-            </Tabs>
-        </div>
+                    <Pagination
+                        itemCount={filteredAndSortedSystems.length}
+                        widgetId="systems-pagination-bottom"
+                        perPage={perPage}
+                        page={currentPage}
+                        variant={PaginationVariant.bottom}
+                        onSetPage={(_event, newPage) => setCurrentPage(newPage)}
+                        onPerPageSelect={(_event, newPerPage) => {
+                            setPerPage(newPerPage);
+                            setCurrentPage(1);
+                        }}
+                    />
+                </TabContent>
+            </PageSection>
+        </>
     );
 };
 
-export default TemplateDetail; 
+export default TemplateDetail;
