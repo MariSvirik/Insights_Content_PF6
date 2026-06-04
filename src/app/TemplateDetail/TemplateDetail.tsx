@@ -317,7 +317,7 @@ const TemplateDetail: React.FunctionComponent = () => {
             <PageSection aria-label="Template detail">
                 <Flex direction={{ default: 'column' }}>
                     <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsFlexStart' }}>
-                        <Flex spaceItems={{ default: 'spaceItemsMd' }} alignItems={{ default: 'alignItemsCenter' }} wrap={{ default: 'wrap' }}>
+                        <Flex spaceItems={{ default: 'spaceItemsMd' }} alignItems={{ default: 'alignItemsCenter' }} flexWrap={{ default: 'wrap' }}>
                             <FlexItem>
                                 <Title headingLevel="h1" size="2xl" className="pf-v6-u-mb-0">{templateData.name}</Title>
                             </FlexItem>
@@ -377,12 +377,12 @@ const TemplateDetail: React.FunctionComponent = () => {
                     <Tab eventKey={0} title={<TabTitleText>Repositories</TabTitleText>} tabContentRef={repositoriesTabRef} />
                     <Tab eventKey={1} title={<TabTitleText>Systems</TabTitleText>} tabContentRef={systemsTabRef} />
                 </Tabs>
-                <TabContent eventKey={0} ref={repositoriesTabRef} hidden={activeTab !== 0}>
+                <TabContent eventKey={0} id="repositories-tab" ref={repositoriesTabRef} hidden={activeTab !== 0}>
                     <div className="pf-v6-u-p-lg">
                         <p>Repositories linked to this template will appear here.</p>
                     </div>
                 </TabContent>
-                <TabContent eventKey={1} ref={systemsTabRef} hidden={activeTab !== 1} className="pf-v6-u-pt-md">
+                <TabContent eventKey={1} id="systems-tab" ref={systemsTabRef} hidden={activeTab !== 1} className="pf-v6-u-pt-md">
                     {systemsToolbar}
 
                     <Table aria-label="Systems table">
