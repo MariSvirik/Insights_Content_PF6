@@ -2,6 +2,7 @@ import * as React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Button,
+  Divider,
   Masthead,
   MastheadBrand,
   MastheadLogo,
@@ -16,7 +17,7 @@ import {
   PageSidebarBody,
   SkipToContent,
 } from '@patternfly/react-core';
-import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
+import { IAppRoute, IAppRouteGroup, AppRouteConfig, routes } from '@app/routes';
 import { BarsIcon } from '@patternfly/react-icons';
 
 interface IAppLayout {
@@ -98,23 +99,39 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     </NavItem>
   );
 
+  const isGroupActive = (group: IAppRouteGroup): boolean =>
+    group.routes?.some((route) => route.path === location.pathname) || false;
+
   const renderNavGroup = (group: IAppRouteGroup, groupIndex: number) => (
     <NavExpandable
       key={`${group.label}-${groupIndex}`}
       id={`${group.label}-${groupIndex}`}
       title={group.label}
-      isActive={group.routes.some((route) => route.path === location.pathname)}
+      isActive={isGroupActive(group)}
+      isExpanded={isGroupActive(group)}
     >
-      {group.routes.map((route, idx) => route.label && renderNavItem(route, idx))}
+      {group.routes?.map((route, idx) => {
+        if (!route.label) return null;
+        return (
+          <React.Fragment key={`${route.label}-${idx}`}>
+            {route.dividerBefore && <Divider component="li" style={{ margin: '4px 0' }} />}
+            {renderNavItem(route, idx)}
+          </React.Fragment>
+        );
+      })}
     </NavExpandable>
   );
 
   const Navigation = (
     <Nav id="nav-primary-simple">
       <NavList id="nav-list-simple">
-        {routes.map(
-          (route, idx) => route.label && (!route.routes ? renderNavItem(route, idx) : renderNavGroup(route, idx)),
-        )}
+        {routes.map((route, idx) => {
+          if (!route.label) return null;
+          if ('routes' in route && route.routes !== undefined) {
+            return renderNavGroup(route as IAppRouteGroup, idx);
+          }
+          return renderNavItem(route as IAppRoute, idx);
+        })}
       </NavList>
     </Nav>
   );

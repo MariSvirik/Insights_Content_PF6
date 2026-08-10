@@ -37,3 +37,15 @@ body,
 .app-repositories-table tbody td {
   vertical-align: top;
 }
+
+/* Form label help icon: plain icon without border/background */
+.pf-v6-c-form__group-label-help {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--pf-t--global--icon--color--regular);
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}

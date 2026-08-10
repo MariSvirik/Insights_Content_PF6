@@ -1,61 +1,126 @@
 import * as React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Dashboard } from '@app/Dashboard/Dashboard';
-import { Support } from '@app/Support/Support';
-import { GeneralSettings } from '@app/Settings/General/GeneralSettings';
-import { ProfileSettings } from '@app/Settings/Profile/ProfileSettings';
-import { TableDemo } from '@app/TableDemo/TableDemo';
 import { ContentManagement } from '@app/ContentManagement/ContentManagement';
 import { Repositories } from '@app/Repositories/Repositories';
 import { ZeroContent } from '@app/ZeroContent/ZeroContent';
 import TemplateDetail from '@app/TemplateDetail/TemplateDetail';
-import { TaskDetail } from '@app/TaskDetail/TaskDetail';
-import { Tasks } from '@app/Tasks/Tasks';
 import { NotFound } from '@app/NotFound/NotFound';
 
+const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
+  <div style={{ padding: '24px' }}>
+    <h1>{title}</h1>
+    <p>This page is under construction.</p>
+  </div>
+);
+
 export interface IAppRoute {
-  label?: string; // Excluding the label will exclude the route from the nav sidebar in AppLayout
+  label?: string;
   element: React.ReactElement;
   exact?: boolean;
   path: string;
   title: string;
+  dividerBefore?: boolean;
   routes?: undefined;
+  groups?: undefined;
 }
 
 export interface IAppRouteGroup {
   label: string;
-  routes: IAppRoute[];
+  routes?: IAppRoute[];
+  groups?: IAppRouteGroup[];
+  dividerBefore?: boolean;
 }
 
 export type AppRouteConfig = IAppRoute | IAppRouteGroup;
 
 const routes: AppRouteConfig[] = [
   {
-    element: <Dashboard />,
+    element: <PlaceholderPage title="Dashboard" />,
     exact: true,
     label: 'Dashboard',
     path: '/',
-    title: 'PatternFly Seed | Main Dashboard',
+    title: 'PatternFly Seed | Dashboard',
   },
   {
-    element: <TableDemo />,
-    exact: true,
-    label: 'Table Demo',
-    path: '/table-demo',
-    title: 'PatternFly Seed | Table Demo',
+    label: 'Inventory',
+    routes: [],
   },
   {
-    element: <ContentManagement />,
-    exact: true,
-    label: 'Content Management',
-    path: '/content-management',
-    title: 'PatternFly Seed | Content Management',
+    label: 'Content',
+    routes: [
+      {
+        element: <ContentManagement />,
+        exact: true,
+        label: 'Templates',
+        path: '/content-management',
+        title: 'PatternFly Seed | Templates',
+      },
+      {
+        element: <PlaceholderPage title="Advisories" />,
+        exact: true,
+        label: 'Advisories',
+        path: '/advisories',
+        title: 'PatternFly Seed | Advisories',
+        dividerBefore: true,
+      },
+      {
+        element: <PlaceholderPage title="Packages" />,
+        exact: true,
+        label: 'Packages',
+        path: '/packages',
+        title: 'PatternFly Seed | Packages',
+      },
+      {
+        element: <Repositories />,
+        exact: true,
+        label: 'Repositories',
+        path: '/repositories',
+        title: 'PatternFly Seed | Repositories',
+      },
+      {
+        element: <PlaceholderPage title="Systems" />,
+        exact: true,
+        label: 'Systems',
+        path: '/systems',
+        title: 'PatternFly Seed | Systems',
+        dividerBefore: true,
+      },
+    ],
   },
   {
-    element: <Repositories />,
+    label: 'Operations',
+    routes: [],
+  },
+  {
+    label: 'Security',
+    routes: [],
+  },
+  {
+    label: 'Planning',
+    routes: [],
+  },
+  {
+    label: 'Business',
+    routes: [],
+  },
+  {
+    label: 'Automation Toolkit',
+    routes: [],
+  },
+  {
+    element: <PlaceholderPage title="Registration Assistant" />,
     exact: true,
-    path: '/repositories',
-    title: 'PatternFly Seed | Repositories',
+    label: 'Registration Assistant',
+    path: '/registration-assistant',
+    title: 'PatternFly Seed | Registration Assistant',
+  },
+  {
+    element: <PlaceholderPage title="Learning Resources" />,
+    exact: true,
+    label: 'Learning Resources',
+    path: '/learning-resources',
+    title: 'PatternFly Seed | Learning Resources',
   },
   {
     element: <ZeroContent />,
@@ -70,51 +135,27 @@ const routes: AppRouteConfig[] = [
     path: '/template/:templateName',
     title: 'PatternFly Seed | Template Detail',
   },
-  {
-    element: <Tasks />,
-    exact: true,
-    label: 'Tasks',
-    path: '/tasks',
-    title: 'PatternFly Seed | Tasks',
-  },
-  {
-    element: <TaskDetail />,
-    exact: true,
-    path: '/task/:taskId',
-    title: 'PatternFly Seed | Task Detail',
-  },
-  {
-    element: <Support />,
-    exact: true,
-    label: 'Support',
-    path: '/support',
-    title: 'PatternFly Seed | Support Page',
-  },
-  {
-    label: 'Settings',
-    routes: [
-      {
-        element: <GeneralSettings />,
-        exact: true,
-        label: 'General',
-        path: '/settings/general',
-        title: 'PatternFly Seed | General Settings',
-      },
-      {
-        element: <ProfileSettings />,
-        exact: true,
-        label: 'Profile',
-        path: '/settings/profile',
-        title: 'PatternFly Seed | Profile Settings',
-      },
-    ],
-  },
 ];
 
-const flattenedRoutes: IAppRoute[] = routes.reduce(
-  (flattened, route) => [...flattened, ...(route.routes ? route.routes : [route])],
-  [] as IAppRoute[],
-);
+const flattenRoutes = (configs: AppRouteConfig[]): IAppRoute[] => {
+  const result: IAppRoute[] = [];
+  for (const config of configs) {
+    if ('path' in config && config.path) {
+      result.push(config as IAppRoute);
+    }
+    if ('routes' in config && config.routes) {
+      result.push(...flattenRoutes(config.routes));
+    }
+    if ('groups' in config && config.groups) {
+      for (const group of config.groups) {
+        result.push(...flattenRoutes(group.routes || []));
+      }
+    }
+  }
+  return result;
+};
+
+const flattenedRoutes: IAppRoute[] = flattenRoutes(routes);
 
 const AppRoutes = (): React.ReactElement => (
   <Routes>
